@@ -2,7 +2,7 @@ name: docker-compose-actions-workflow
 on: push
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: nest-audio
     steps:
       - name: setup variables
         run: |
