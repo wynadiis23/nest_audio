@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
-import { dsConfiguration, schemaValidation } from './configs';
+import { appConfiguration, dsConfiguration, schemaValidation } from './configs';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
@@ -15,8 +15,11 @@ import { PlaylistContentModule } from './playlist-content/playlist-content.modul
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`${process.cwd()}/src/configs/env/.env.ds`],
-      load: [dsConfiguration],
+      envFilePath: [
+        `${process.cwd()}/src/configs/env/.env.ds`,
+        `${process.cwd()}/src/configs/env/.env.app`,
+      ],
+      load: [dsConfiguration, appConfiguration],
       validationSchema: schemaValidation,
       cache: true,
     }),
