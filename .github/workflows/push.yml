@@ -1,0 +1,19 @@
+name: docker-compose-actions-workflow
+on: push
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - name: setup variables
+        run: |
+          touch .env
+          echo APP_PORT=${{ secrets.APP_PORT }} >> .env
+          echo DS_HOST=${{ secrets.DS_HOST }} >> .env
+          echo DS_PORT=${{ secrets.DS_PORT }} >> .env
+          echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
+          echo DS_PASSWORD=${{ secrets.DS_PASSWORD }} >> .env
+          echo DS_NAME=${{ secrets.DS_NAME }} >> .env
+          echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
+      - uses: actions/checkout@v2
+      - name: Build the stack
+        run: docker-compose up -d

@@ -5,8 +5,8 @@ services:
     container_name: nest_audio_pg
     image: postgres:15.4
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_PASSWORD=${DS_PASSWORD}
+      - POSTGRES_DB=${DS_NAME}
     ports:
       - 5437:5432
     volumes:
