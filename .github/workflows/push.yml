@@ -20,5 +20,9 @@ jobs:
           echo DS_NAME=${{ secrets.DS_NAME }} >> .env
           echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
           cat .env
-      - name: Build the stack
-        run: docker compose up -d
+      - name: build the stack
+        run: docker compose build --no-cache
+      - name: deploy the stack
+        run: |
+          docker compose down --remove-orphans
+          docker compose up -d

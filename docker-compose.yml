@@ -27,7 +27,7 @@ services:
     environment:
       - NODE_ENV=production
     volumes:
-      - apilogsvolume:/usr/src/app/logs:rw
+      - apilogsvolume:/public
     depends_on:
       - db
     restart: unless-stopped
@@ -42,4 +42,14 @@ networks:
 
 volumes:
   postgresvolume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/user/container-data/nest_audio/database/postgresql/data
   apilogsvolume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/user/container-data/nest_audio/public
