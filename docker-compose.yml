@@ -40,15 +40,4 @@ networks:
 
 volumes:
   postgresvolume:
-  driver: local
-  driver_opts:
-      type: none
-      o: bind
-      device: /home/user/container-data/nest_audio/postgres/data
-
   apilogsvolume:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/user/container-data/nest_audio/logs
