@@ -4,6 +4,7 @@ jobs:
   deploy:
     runs-on: nest-audio
     steps:
+      - uses: actions/checkout@v2
       - name: setup variables
         run: |
           touch .env
@@ -15,6 +16,5 @@ jobs:
           echo DS_NAME=${{ secrets.DS_NAME }} >> .env
           echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
           cat .env
-      - uses: actions/checkout@v2
       - name: Build the stack
         run: docker compose up -d

@@ -14,6 +14,8 @@ services:
     restart: unless-stopped
     networks:
       - nest_audio-network
+    env_file:
+      - .env
 
   api:
     container_name: nest_audio_api
