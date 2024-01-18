@@ -1,7 +1,7 @@
 name: docker-compose-actions-workflow
 on: push
 jobs:
-  test:
+  deploy:
     runs-on: nest-audio
     steps:
       - name: setup variables
@@ -14,6 +14,7 @@ jobs:
           echo DS_PASSWORD=${{ secrets.DS_PASSWORD }} >> .env
           echo DS_NAME=${{ secrets.DS_NAME }} >> .env
           echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
+          cat .env
       - uses: actions/checkout@v2
       - name: Build the stack
-        run: docker-compose up -d
+        run: docker compose up -d
