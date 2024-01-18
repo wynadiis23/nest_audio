@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: nest_audio_pg
+    image: postgres:15.4
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    ports:
+      - 5437:5432
+    volumes:
+      - postgresvolume:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - nest_audio-network
+
+  api:
+    container_name: nest_audio_api
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - apilogsvolume:/usr/src/app/logs:rw
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - nest_audio-network
+    env_file:
+      - .env
+
+networks:
+  nest_audio-network:
+    driver: bridge
+
+volumes:
+  postgresvolume:
+  driver: local
+  driver_opts:
+      type: none
+      o: bind
+      device: /home/adisaputra/container-data/nest_audio/postgres/data
+
+  apilogsvolume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/adisaputra/container-data/nest_audio/logs
