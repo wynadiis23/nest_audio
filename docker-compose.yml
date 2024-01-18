@@ -28,7 +28,6 @@ services:
       - apilogsvolume:/usr/src/app/logs:rw
     depends_on:
       - db
-      - redis
     restart: unless-stopped
     networks:
       - nest_audio-network
@@ -45,11 +44,11 @@ volumes:
   driver_opts:
       type: none
       o: bind
-      device: /home/adisaputra/container-data/nest_audio/postgres/data
+      device: /home/user/container-data/nest_audio/postgres/data
 
   apilogsvolume:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /home/adisaputra/container-data/nest_audio/logs
+      device: /home/user/container-data/nest_audio/logs
