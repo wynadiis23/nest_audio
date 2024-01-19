@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -9,42 +10,18 @@ import {
   Query,
   Res,
   StreamableFile,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { TracksService } from './tracks.service';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
 import * as fs from 'fs';
-import { extname, join } from 'path';
-import { diskStorage } from 'multer';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { join } from 'path';
+import MultipleTrackUploadFilesInterceptor from '../utils/multipleTrackUploadFiles.interceptor';
+import { TracksDto } from './dto';
 
 const path = '/public/files/tracks/';
-
-const fullPath = join(__dirname, '../..', path);
-console.log(fullPath);
-
-export const storage = diskStorage({
-  destination: (req, file, cb) => {
-    // Create folder if not exists
-    fs.mkdirSync(fullPath, { recursive: true });
-
-    cb(null, fullPath);
-  },
-  filename: (req, file, cb) => {
-    const name = file.originalname.split(' ').join('-');
-    const ext = extname(file.originalname);
-    cb(null, name + '-' + Date.now() + ext);
-  },
-});
-
-export const trackFilter = (req, file, cb) => {
-  if (!file.originalname.match(/\.(mp3)$/)) {
-    req.fileValidationError = 'Only mp3 file were allowed';
-  }
-  cb(null, true);
-};
 
 @Controller('tracks')
 export class TracksController {
@@ -61,38 +38,21 @@ export class TracksController {
   }
 
   @Post()
-  // @UseInterceptors(
-  //   LocalFilesInterceptor({
-  //     fieldName: 'file',
-  //     path: '/tracks',
-  //     fileFilter: (request, file, callback) => {
-  //       if (!file.mimetype.includes('audio')) {
-  //         return callback(
-  //           new BadRequestException('Provide a valid audio'),
-  //           false,
-  //         );
-  //       }
-  //       callback(null, true);
-  //     },
-  //   }),
-  // )
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: {
-        files: 1,
-        // fileSize: 5 * 10 * 10 * 10 * 10 * 10 * 10 * 10, // 50 mb in bytes
-        // fileSize: 1000000, // in bytes -> 1 mb
-      },
-      storage: storage,
-      fileFilter: trackFilter,
+    MultipleTrackUploadFilesInterceptor({
+      fieldName: 'files',
+      path: '/tracks',
     }),
   )
-  async addTracks(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    return await this.tracksService.create({
-      filename: file.originalname,
+  async addTracks(@UploadedFiles() files: Array<Express.Multer.File>) {
+    const tracks: TracksDto[] = files.map((file) => ({
+      name: file.originalname,
       path: path + file.filename,
       mimetype: file.mimetype,
+    }));
+
+    return await this.tracksService.createMultiple({
+      tracks: tracks,
     });
   }
 
