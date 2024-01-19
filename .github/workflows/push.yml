@@ -20,6 +20,9 @@ jobs:
           echo DS_PASSWORD=${{ secrets.DS_PASSWORD }} >> .env
           echo DS_NAME=${{ secrets.DS_NAME }} >> .env
           echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
+          echo REDIS_HOST=${{ secrets.REDIS_HOST }} >> .env
+          echo REDIS_PORT=${{ secrets.REDIS_PORT }} >> .env
+          echo REDIS_TTL=${{ secrets.REDIS_TTL }} >> .env
           cat .env
       - name: build the stack
         run: docker compose build --no-cache
