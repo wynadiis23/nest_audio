@@ -13,6 +13,7 @@ jobs:
           touch .env
           echo APP_PORT=${{ secrets.APP_PORT }} >> .env
           echo APP_FRONT_END_DOMAIN=${{ secrets.APP_FRONT_END_DOMAIN }} >> .env
+          echo APP_TRACK_UPLOAD_LIMIT=${{ secrets.APP_TRACK_UPLOAD_LIMIT }} >> .env
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
           echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
