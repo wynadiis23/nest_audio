@@ -137,4 +137,12 @@ export class TracksService {
       type: trackMetadata.mimetype,
     });
   }
+
+  async deleteAllTrack() {
+    try {
+      return await this.tracksRepository.query(`DELETE FROM tracks`);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }

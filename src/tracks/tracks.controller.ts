@@ -23,7 +23,6 @@ import {
   ApiBody,
   ApiConsumes,
   ApiHeader,
-  ApiHeaders,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -138,5 +137,11 @@ export class TracksController {
     });
 
     return streamableFile;
+  }
+
+  @Delete('/delete-all')
+  @ApiOperation({ summary: 'Will delete all track. for dev purpose only' })
+  async deleteAllTrack() {
+    return await this.tracksService.deleteAllTrack();
   }
 }
