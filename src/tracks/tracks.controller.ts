@@ -19,24 +19,68 @@ import * as fs from 'fs';
 import { join } from 'path';
 import MultipleTrackUploadFilesInterceptor from '../utils/multipleTrackUploadFiles.interceptor';
 import { TracksDto } from './dto';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiHeader,
+  ApiHeaders,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 const path = '/public/files/tracks/';
 
+@ApiTags('Tracks')
 @Controller('tracks')
 export class TracksController {
   constructor(private readonly tracksService: TracksService) {}
 
   @Get()
+  @ApiOperation({
+    summary: 'List of available track',
+  })
   async list() {
     return await this.tracksService.list();
   }
 
   @Delete()
+  @ApiOperation({
+    summary:
+      'Delete tracks. It will also delete track from playlist content. (DO NOT USE IT)',
+  })
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    required: true,
+    description: 'Id of track',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
   async delete(@Query('id') id: string) {
     return await this.tracksService.delete(id);
   }
 
   @Post()
+  @ApiOperation({
+    summary: 'Add tracks. Can add multiple track up to upload limit',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['files'],
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: 'Track to be added',
+        },
+      },
+    },
+  })
   @UseInterceptors(
     MultipleTrackUploadFilesInterceptor({
       fieldName: 'files',
@@ -56,6 +100,11 @@ export class TracksController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Stream track based on track id' })
+  @ApiHeader({
+    name: 'range',
+    required: false,
+  })
   @Header('Accept-Ranges', 'bytes')
   async streamAudio(
     @Param('id') id: string,
