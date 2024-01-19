@@ -63,7 +63,7 @@ function MultipleTrackUploadFilesInterceptor(
 
       this.filesInterceptor = new (FilesInterceptor(
         options.fieldName,
-        trackUploadLimit,
+        +trackUploadLimit,
         multerOptions,
       ))();
     }
