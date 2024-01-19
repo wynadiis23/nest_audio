@@ -6,6 +6,7 @@ import { PlaylistDto } from './dto/playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { TracksService } from '../tracks/tracks.service';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
+import { PublishedStatusEnum } from './enum';
 
 @Injectable()
 export class PlaylistService {
@@ -27,8 +28,12 @@ export class PlaylistService {
     }
   }
 
-  async list() {
-    return await this.playlistRepository.find();
+  async list(publish: string) {
+    return await this.playlistRepository.find({
+      where: {
+        published: parseInt(publish),
+      },
+    });
   }
 
   async detail(id: string) {
@@ -45,25 +50,39 @@ export class PlaylistService {
 
   async update(id: string, payload: UpdatePlaylistDto) {
     try {
-      const trackMetadatas = await this.tracksService.getMultipleTrackMetadata(
-        payload.trackIds,
-      );
+      let data: Playlist;
 
-      const tracks = trackMetadatas.map(
-        (track): DeepPartial<PlaylistContent> => ({
-          trackId: track.id,
-          playlistId: id,
-          trackName: track.name,
-        }),
-      );
+      if (payload.trackIds) {
+        const trackMetadatas =
+          await this.tracksService.getMultipleTrackMetadata(payload.trackIds);
 
-      const data = this.playlistRepository.create({
-        id: id,
-        name: payload.name,
-        playlistContents: tracks,
-      });
+        const tracks = trackMetadatas.map(
+          (track): DeepPartial<PlaylistContent> => ({
+            trackId: track.id,
+            playlistId: id,
+            trackName: track.name,
+          }),
+        );
 
-      await this.playlistRepository.save(data);
+        if (tracks.length === 0) {
+          payload.publish = PublishedStatusEnum.UNPUBLISHED;
+        }
+
+        data = this.playlistRepository.create({
+          id: id,
+          name: payload.name,
+          published: parseInt(payload.publish),
+          playlistContents: tracks,
+        });
+      } else {
+        data = this.playlistRepository.create({
+          id: id,
+          name: payload.name,
+          published: parseInt(payload.publish),
+        });
+      }
+
+      return await this.playlistRepository.save(data);
     } catch (error) {
       throw new InternalServerErrorException();
     }

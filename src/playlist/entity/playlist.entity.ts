@@ -7,6 +7,9 @@ export class Playlist extends SharedEntity {
   @Column({ length: 128 })
   name: string;
 
+  @Column({ name: 'published', default: 0 })
+  published: number;
+
   @OneToMany(
     () => PlaylistContent,
     (playlistContent) => playlistContent.playlist,

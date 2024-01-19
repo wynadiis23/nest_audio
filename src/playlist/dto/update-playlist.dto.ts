@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PlaylistDto } from './playlist.dto';
 import { ArrayNotEmpty, IsNotEmpty, IsUUID } from 'class-validator';
+import { PublishedStatusEnum } from '../enum';
 
 export class UpdatePlaylistDto extends PlaylistDto {
   @ApiProperty({
@@ -24,5 +25,17 @@ export class UpdatePlaylistDto extends PlaylistDto {
   })
   @ArrayNotEmpty()
   @IsNotEmpty()
-  trackIds: string[];
+  trackIds?: string[];
+
+  @ApiProperty({
+    name: 'publish',
+    type: 'string',
+    enum: PublishedStatusEnum,
+    required: false,
+    description: 'Playlist published status',
+    example: '1',
+  })
+  @IsUUID(4)
+  @IsNotEmpty()
+  publish?: PublishedStatusEnum;
 }
