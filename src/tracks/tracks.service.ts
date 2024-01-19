@@ -13,6 +13,7 @@ import { Tracks } from './entity/tracks.entity';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
+import { MultipleTracksDto } from './dto/multiple-tracks.dto';
 
 @Injectable()
 export class TracksService {
@@ -27,12 +28,23 @@ export class TracksService {
 
   async create(payload: TracksDto) {
     const data = this.tracksRepository.create({
-      name: payload.filename,
+      name: payload.name,
       path: payload.path,
       mimetype: payload.mimetype,
     });
 
     await this.tracksRepository.save(data);
+  }
+
+  async createMultiple(payload: MultipleTracksDto) {
+    try {
+      console.log(payload.tracks);
+      const tracks = this.tracksRepository.create(payload.tracks);
+
+      await this.tracksRepository.save(tracks);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
   async delete(id: string) {
