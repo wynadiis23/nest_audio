@@ -72,7 +72,6 @@ function MultipleTrackUploadFilesInterceptor(
       return this.filesInterceptor.intercept(...args);
     }
   }
-  console.log(Interceptor);
   return mixin(Interceptor);
 }
 
