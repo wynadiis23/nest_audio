@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +18,9 @@ async function bootstrap() {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true, // TODO: set => credentials: 'include' or withCredentials: true in the client's request header
   });
+
+  app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
+  app.use(bodyParser.json({ limit: '2gb' }));
 
   const config = new DocumentBuilder()
     .setTitle('Cats example')
