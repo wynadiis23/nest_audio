@@ -5,6 +5,10 @@ export const schemaValidation = Joi.object({
   APP_PORT: Joi.string().required().default(3000),
   APP_FRONT_END_DOMAIN: Joi.string().required(),
   APP_TRACK_UPLOAD_LIMIT: Joi.number().required().default(10),
+  APP_ACCESS_TOKEN_SECRET: Joi.string().required(),
+  APP_ACCESS_TOKEN_EXP: Joi.number().required(),
+  APP_REFRESH_TOKEN_SECRET: Joi.string().required(),
+  APP_REFRESH_TOKEN_EXP: Joi.number().required(),
 
   // Database Configuration
   DS_HOST: Joi.string().required(),
