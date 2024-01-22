@@ -23,7 +23,8 @@ import { PlaylistContentModule } from './playlist-content/playlist-content.modul
 import { StreamStatusModule } from './stream-status/stream-status.module';
 import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { UploadProgressMiddleware } from './common/middleware/upload-progress.middleware';
+import { AuthenticationModule } from './authentication/authentication.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -50,6 +51,8 @@ import { UploadProgressMiddleware } from './common/middleware/upload-progress.mi
     PlaylistContentModule,
     StreamStatusModule,
     RedisCacheModule,
+    AuthenticationModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

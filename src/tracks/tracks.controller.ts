@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Query,
-  Req,
   Res,
   Sse,
   StreamableFile,

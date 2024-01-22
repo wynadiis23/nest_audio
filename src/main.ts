@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import { useContainer } from 'class-validator';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +15,8 @@ async function bootstrap() {
   const whitelistDomain =
     APP_FRONTEND_DOMAIN == '*' ? '*' : APP_FRONTEND_DOMAIN.split(',');
 
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
   app.enableCors({
     origin: whitelistDomain,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
@@ -21,6 +25,8 @@ async function bootstrap() {
 
   app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
   app.use(bodyParser.json({ limit: '2gb' }));
+
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const config = new DocumentBuilder()
     .setTitle('Cats example')
