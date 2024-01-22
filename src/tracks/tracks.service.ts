@@ -14,12 +14,14 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class TracksService {
   constructor(
     @InjectRepository(Tracks)
     private readonly tracksRepository: Repository<Tracks>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async list() {
@@ -38,7 +40,11 @@ export class TracksService {
 
   async createMultiple(payload: MultipleTracksDto) {
     try {
-      console.log(payload.tracks);
+      for (const track of payload.tracks) {
+        this.eventEmitter.emit('add-tracks', { track: track.name });
+      }
+      // fix later
+      this.eventEmitter.emit('add-tracks', { track: null });
       const tracks = this.tracksRepository.create(payload.tracks);
 
       await this.tracksRepository.save(tracks);

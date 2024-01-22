@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Res,
+  Sse,
   StreamableFile,
   UploadedFiles,
   UseInterceptors,
@@ -27,13 +28,18 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { Observable, fromEvent, map } from 'rxjs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const path = '/public/files/tracks/';
 
 @ApiTags('Tracks')
 @Controller('tracks')
 export class TracksController {
-  constructor(private readonly tracksService: TracksService) {}
+  constructor(
+    private readonly tracksService: TracksService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -143,5 +149,23 @@ export class TracksController {
   @ApiOperation({ summary: 'Will delete all track. for dev purpose only' })
   async deleteAllTrack() {
     return await this.tracksService.deleteAllTrack();
+  }
+
+  @Sse('/sse/add-tracks')
+  sse(): Observable<MessageEvent> {
+    return fromEvent(this.eventEmitter, 'add-tracks').pipe(
+      map((data) => {
+        return new MessageEvent('add-tracks', { data: data });
+      }),
+    );
+  }
+
+  @Sse('/sse/upload-progress')
+  sseUploadProgress(): Observable<MessageEvent> {
+    return fromEvent(this.eventEmitter, 'upload-progress').pipe(
+      map((data) => {
+        return new MessageEvent('upload-progress', { data: data });
+      }),
+    );
   }
 }

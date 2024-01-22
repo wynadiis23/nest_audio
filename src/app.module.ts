@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
@@ -17,6 +22,8 @@ import { PlaylistModule } from './playlist/playlist.module';
 import { PlaylistContentModule } from './playlist-content/playlist-content.module';
 import { StreamStatusModule } from './stream-status/stream-status.module';
 import { RedisCacheModule } from './redis-cache/redis-cache.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { UploadProgressMiddleware } from './common/middleware/upload-progress.middleware';
 
 @Module({
   imports: [
@@ -37,6 +44,7 @@ import { RedisCacheModule } from './redis-cache/redis-cache.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..'),
     }),
+    EventEmitterModule.forRoot(),
     TracksModule,
     PlaylistModule,
     PlaylistContentModule,
@@ -46,4 +54,10 @@ import { RedisCacheModule } from './redis-cache/redis-cache.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(UploadProgressMiddleware)
+      .forRoutes({ path: 'tracks', method: RequestMethod.POST });
+  }
+}
