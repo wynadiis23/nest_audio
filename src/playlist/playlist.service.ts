@@ -22,7 +22,7 @@ export class PlaylistService {
         name: payload.name,
       });
 
-      await this.playlistRepository.save(data);
+      return await this.playlistRepository.save(data);
     } catch (error) {
       throw new InternalServerErrorException();
     }
