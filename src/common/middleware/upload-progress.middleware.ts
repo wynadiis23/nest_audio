@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NextFunction, Request } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 @Injectable()
 export class UploadProgressMiddleware implements NestMiddleware {

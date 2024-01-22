@@ -54,10 +54,4 @@ import { UploadProgressMiddleware } from './common/middleware/upload-progress.mi
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(UploadProgressMiddleware)
-      .forRoutes({ path: 'tracks', method: RequestMethod.POST });
-  }
-}
+export class AppModule {}

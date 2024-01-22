@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   Sse,
   StreamableFile,
@@ -93,6 +94,7 @@ export class TracksController {
     }),
   )
   async addTracks(@UploadedFiles() files: Array<Express.Multer.File>) {
+    console.log(files);
     const tracks: TracksDto[] = files.map((file) => ({
       name: file.originalname,
       path: path + file.filename,
@@ -160,12 +162,12 @@ export class TracksController {
     );
   }
 
-  @Sse('/sse/upload-progress')
-  sseUploadProgress(): Observable<MessageEvent> {
-    return fromEvent(this.eventEmitter, 'upload-progress').pipe(
-      map((data) => {
-        return new MessageEvent('upload-progress', { data: data });
-      }),
-    );
-  }
+  // @Sse('/sse/upload-progress')
+  // sseUploadProgress(): Observable<MessageEvent> {
+  //   return fromEvent(this.eventEmitter, 'upload-progress').pipe(
+  //     map((data) => {
+  //       return new MessageEvent('upload-progress', { data: data });
+  //     }),
+  //   );
+  // }
 }
