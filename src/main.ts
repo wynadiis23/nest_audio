@@ -15,6 +15,7 @@ async function bootstrap() {
   const whitelistDomain =
     APP_FRONTEND_DOMAIN == '*' ? '*' : APP_FRONTEND_DOMAIN.split(',');
 
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.enableCors({
@@ -25,8 +26,6 @@ async function bootstrap() {
 
   app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
   app.use(bodyParser.json({ limit: '2gb' }));
-
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const config = new DocumentBuilder()
     .setTitle('Cats example')

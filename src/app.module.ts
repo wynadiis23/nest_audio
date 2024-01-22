@@ -25,6 +25,7 @@ import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { UserModule } from './user/user.module';
+import { IsNotExist } from './common/validator';
 
 @Module({
   imports: [
@@ -55,6 +56,6 @@ import { UserModule } from './user/user.module';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, IsNotExist],
 })
 export class AppModule {}

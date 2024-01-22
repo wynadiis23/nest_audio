@@ -7,7 +7,7 @@ import {
   Matches,
   Validate,
 } from 'class-validator';
-import { UserExistsRule } from '../../common/validator';
+import { IsNotExist } from '../../common/validator';
 
 export class SignUpDto {
   @ApiProperty({
@@ -34,7 +34,7 @@ export class SignUpDto {
   @Matches(/^.*[^_.]$/, {
     message: 'username most not end with underscore or period',
   })
-  @Validate(UserExistsRule, {
+  @Validate(IsNotExist, ['User'], {
     message: 'Username already exist.',
   })
   @Transform(({ value }) => value.toString().trim().toLowerCase())

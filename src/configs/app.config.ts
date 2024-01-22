@@ -9,4 +9,5 @@ export const appConfiguration = registerAs('app', () => ({
   accessTokenExpiration: process.env.APP_ACCESS_TOKEN_EXP,
   refreshTokenSecret: process.env.APP_REFRESH_TOKEN_SECRET,
   refreshTokenExpiration: process.env.APP_REFRESH_TOKEN_EXP,
+  appCookieDomain: process.env.APP_COOKIE_DOMAIN,
 }));

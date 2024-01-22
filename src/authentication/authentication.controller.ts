@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { AuthenticationService } from './authentication.service';
 import { SignInDto, SignUpDto } from './dto';
+import { Response } from 'express';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -13,8 +14,22 @@ export class AuthenticationController {
     type: SignInDto,
     required: true,
   })
-  async signIn(@Body() dto: SignInDto) {
-    return await this.authenticationService.signIn(dto);
+  async signIn(
+    @Body() dto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const signInResponse = await this.authenticationService.signIn(dto);
+    const generatedCookie =
+      this.authenticationService.generateRefreshTokenCookie(
+        signInResponse.refreshToken,
+      );
+    res.cookie(
+      generatedCookie.key,
+      generatedCookie.refreshToken,
+      generatedCookie.options,
+    );
+
+    return signInResponse;
   }
 
   @Post('sign-up')
@@ -23,6 +38,11 @@ export class AuthenticationController {
     required: true,
   })
   async signUp(@Body() dto: SignUpDto) {
-    return await this.authenticationService.signUp(dto);
+    const signUpResponse = await this.authenticationService.signUp(dto);
+
+    return {
+      message: 'Successfully register',
+      username: signUpResponse.username,
+    };
   }
 }

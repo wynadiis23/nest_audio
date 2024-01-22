@@ -9,6 +9,7 @@ import { SignInDto, SignUpDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { appConfiguration } from '../configs';
 import { ConfigType } from '@nestjs/config';
+import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 
 @Injectable()
 export class AuthenticationService {
@@ -96,6 +97,21 @@ export class AuthenticationService {
     return {
       accessToken,
       refreshToken,
+    };
+  }
+
+  generateRefreshTokenCookie(rt: string) {
+    return {
+      key: KEY_REFRESH_TOKEN_COOKIE,
+      refreshToken: rt,
+      options: {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(
+          Date.now() + +this.appConfig.refreshTokenExpiration * 60 * 1000,
+        ),
+        domain: this.appConfig.appCookieDomain,
+      },
     };
   }
 }
