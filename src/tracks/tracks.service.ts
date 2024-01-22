@@ -47,7 +47,7 @@ export class TracksService {
       this.eventEmitter.emit('add-tracks', { track: null });
       const tracks = this.tracksRepository.create(payload.tracks);
 
-      await this.tracksRepository.save(tracks);
+      return await this.tracksRepository.save(tracks);
     } catch (error) {
       throw new InternalServerErrorException();
     }
