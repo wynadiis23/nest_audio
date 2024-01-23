@@ -17,7 +17,7 @@ jobs:
           echo APP_ACCESS_TOKEN_SECRET=${{ secrets.APP_ACCESS_TOKEN_SECRET }} >> .env
           echo APP_ACCESS_TOKEN_EXP=${{ secrets.APP_ACCESS_TOKEN_EXP }} >> .env
           echo APP_REFRESH_TOKEN_SECRET=${{ secrets.APP_REFRESH_TOKEN_SECRET }} >> .env
-          echo APP_REFRESH_TOKEN_SECRET=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
+          echo APP_REFRESH_TOKEN_EXP=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
           echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
