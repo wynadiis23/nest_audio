@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
@@ -23,7 +18,17 @@ import { PlaylistContentModule } from './playlist-content/playlist-content.modul
 import { StreamStatusModule } from './stream-status/stream-status.module';
 import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { UploadProgressMiddleware } from './common/middleware/upload-progress.middleware';
+import { AuthenticationModule } from './authentication/authentication.module';
+import { UserModule } from './user/user.module';
+import { IsNotExist } from './common/validator';
+import { TokenModule } from './token/token.module';
+import {
+  JwtRefreshTokenStrategy,
+  JwtStrategy,
+  LocalStrategy,
+} from './authentication/strategy';
+import { APP_GUARD } from '@nestjs/core';
+import { AccessTokenAuthGuard } from './authentication/guard';
 
 @Module({
   imports: [
@@ -50,8 +55,22 @@ import { UploadProgressMiddleware } from './common/middleware/upload-progress.mi
     PlaylistContentModule,
     StreamStatusModule,
     RedisCacheModule,
+    AuthenticationModule,
+    UserModule,
+    TokenModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    IsNotExist,
+    LocalStrategy,
+    JwtStrategy,
+    JwtRefreshTokenStrategy,
+    {
+      // Use AccessTokenAuthGuard as global guard
+      provide: APP_GUARD,
+      useClass: AccessTokenAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

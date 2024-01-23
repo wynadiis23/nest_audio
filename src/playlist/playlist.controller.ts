@@ -21,8 +21,10 @@ import {
 } from '@nestjs/swagger';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { PublishedStatusEnum } from './enum';
+import { Public } from '../authentication/decorator';
 
 @ApiTags('Playlist')
+@Public()
 @Controller('playlist')
 export class PlaylistController {
   constructor(private readonly playlistService: PlaylistService) {}

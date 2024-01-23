@@ -5,8 +5,10 @@ import { getCurrentDate } from '../utils';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import * as dayjs from 'dayjs';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../authentication/decorator';
 
 @ApiTags('Stream Status')
+@Public()
 @Controller('stream-status')
 export class StreamStatusController {
   constructor(

@@ -2,8 +2,10 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { PlaylistContentService } from './playlist-content.service';
 import { PlaylistContentDto } from './dto/playlist-content.dto';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../authentication/decorator';
 
 @ApiTags('Playlist Content')
+@Public()
 @Controller('playlist-content')
 export class PlaylistContentController {
   constructor(

@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Query,
-  Req,
   Res,
   Sse,
   StreamableFile,
@@ -19,7 +18,7 @@ import { Response } from 'express';
 import { createReadStream } from 'fs';
 import * as fs from 'fs';
 import { join } from 'path';
-import MultipleTrackUploadFilesInterceptor from '../utils/multipleTrackUploadFiles.interceptor';
+import MultipleTrackUploadFilesInterceptor from '../utils/multiple-track-upload-files.interceptor';
 import { TracksDto } from './dto';
 import {
   ApiBody,
@@ -31,10 +30,12 @@ import {
 } from '@nestjs/swagger';
 import { Observable, fromEvent, map } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Public } from '../authentication/decorator';
 
 const path = '/public/files/tracks/';
 
 @ApiTags('Tracks')
+@Public()
 @Controller('tracks')
 export class TracksController {
   constructor(
@@ -94,12 +95,13 @@ export class TracksController {
     }),
   )
   async addTracks(@UploadedFiles() files: Array<Express.Multer.File>) {
-    console.log(files);
     const tracks: TracksDto[] = files.map((file) => ({
       name: file.originalname,
       path: path + file.filename,
       mimetype: file.mimetype,
     }));
+
+    // fetch metadata using music metadata package
 
     return await this.tracksService.createMultiple({
       tracks: tracks,
