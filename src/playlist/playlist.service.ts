@@ -40,7 +40,7 @@ export class PlaylistService {
       )
       .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
       .leftJoinAndMapMany(
-        'playlist.content',
+        'playlist.playlistContents',
         TracksMetadata,
         'tracks_metadata',
         'tracks_metadata.trackId = tracks.id',
@@ -52,11 +52,23 @@ export class PlaylistService {
 
   async detail(id: string) {
     try {
-      return await this.playlistRepository.findOne({
-        where: {
-          id,
-        },
-      });
+      const query = this.playlistRepository
+        .createQueryBuilder('playlist')
+        .leftJoin(
+          PlaylistContent,
+          'playlist_content',
+          'playlist_content.playlistId = playlist.id',
+        )
+        .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+        .leftJoinAndMapMany(
+          'playlist.playlistContents',
+          TracksMetadata,
+          'tracks_metadata',
+          'tracks_metadata.trackId = tracks.id',
+        )
+        .where('playlist.id = :id', { id });
+
+      return await query.getOne();
     } catch (error) {
       throw new InternalServerErrorException();
     }

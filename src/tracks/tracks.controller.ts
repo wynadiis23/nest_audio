@@ -25,6 +25,7 @@ import {
   ApiConsumes,
   ApiHeader,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -49,6 +50,17 @@ export class TracksController {
   })
   async list() {
     return await this.tracksService.list();
+  }
+
+  // list available track for playlist.
+  // this will exclude any track that has been added to given playlist
+  @Get('track-list/:playlistId')
+  @ApiOperation({
+    summary: 'Get list of available track for playlist',
+  })
+  @ApiParam({ name: 'playlistId', required: true, type: 'string' })
+  async playlistAvailableTracks(@Param('playlistId') playlistId: string) {
+    return await this.tracksService.getAvailableTrackForPlaylist(playlistId);
   }
 
   @Delete()
