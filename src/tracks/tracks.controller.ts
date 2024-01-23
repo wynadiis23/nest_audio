@@ -30,10 +30,12 @@ import {
 } from '@nestjs/swagger';
 import { Observable, fromEvent, map } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Public } from '../authentication/decorator';
 
 const path = '/public/files/tracks/';
 
 @ApiTags('Tracks')
+@Public()
 @Controller('tracks')
 export class TracksController {
   constructor(
