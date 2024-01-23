@@ -1,8 +1,16 @@
 import * as bcrypt from 'bcrypt';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Unique } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  OneToMany,
+  Unique,
+} from 'typeorm';
 import { SharedEntity } from '../../common/entity/shared.entity';
 import { Exclude } from 'class-transformer';
 import { InternalServerErrorException } from '@nestjs/common';
+import { Token } from '../../token/entity/token.entity';
 
 @Entity({ name: 'user' })
 @Unique(['username'])
@@ -16,6 +24,11 @@ export class User extends SharedEntity {
 
   @Column({ default: 1 })
   isActive: number;
+
+  @OneToMany(() => Token, (token) => token.user, {
+    cascade: true,
+  })
+  refreshTokens: Token[];
 
   @BeforeInsert()
   @BeforeUpdate()

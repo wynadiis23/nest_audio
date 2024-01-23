@@ -1,19 +1,22 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as bodyParser from 'body-parser';
+import * as express from 'express';
+import * as cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const configService = app.get<ConfigService>(ConfigService);
 
   const APP_FRONTEND_DOMAIN = configService.get('APP_FRONT_END_DOMAIN');
 
   const whitelistDomain =
     APP_FRONTEND_DOMAIN == '*' ? '*' : APP_FRONTEND_DOMAIN.split(',');
+
+  app.use(cookieParser());
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
@@ -24,10 +27,13 @@ async function bootstrap() {
     credentials: true, // TODO: set => credentials: 'include' or withCredentials: true in the client's request header
   });
 
-  app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
-  app.use(bodyParser.json({ limit: '2gb' }));
+  app.use(express.json({ limit: '100mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const config = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('Cats example')
     .setDescription('The cats API description')
     .setVersion('1.0')

@@ -31,4 +31,16 @@ export class UserService {
       throw new InternalServerErrorException();
     }
   }
+
+  async findOneById(id: string) {
+    try {
+      return await this.userRepository.findOne({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }
