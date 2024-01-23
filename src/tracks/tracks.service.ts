@@ -10,13 +10,15 @@ import { createReadStream } from 'fs';
 import * as fs from 'fs';
 import * as rangeParser from 'range-parser';
 import { Tracks } from './entity/tracks.entity';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
 import { GetMetadataDto } from '../tracks-metadata/dto/get-metadata.dto';
+import { Playlist } from '../playlist/entity/playlist.entity';
+import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
 
 @Injectable()
 export class TracksService {
@@ -29,6 +31,37 @@ export class TracksService {
 
   async list() {
     return await this.tracksRepository.find();
+  }
+
+  async getAvailableTrackForPlaylist(playlistId: string) {
+    try {
+      // get list track of current playlist
+      const query = this.tracksRepository
+        .createQueryBuilder('tracks')
+        .select('tracks.id')
+        .leftJoin(
+          PlaylistContent,
+          'playlist_content',
+          'playlist_content.trackId = tracks.id',
+        )
+        .leftJoin(
+          Playlist,
+          'playlist',
+          'playlist_content.playlistId = playlist.id',
+        )
+        .where('playlist.id = :playlistId', { playlistId });
+
+      const alreadyAddedTrack = await query.getMany();
+      const ids = alreadyAddedTrack.map((track) => track.id);
+
+      return await this.tracksRepository.find({
+        where: {
+          id: Not(In(ids)),
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
   async create(payload: TracksDto) {
