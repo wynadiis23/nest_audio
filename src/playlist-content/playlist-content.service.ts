@@ -32,4 +32,17 @@ export class PlaylistContentService {
       throw new InternalServerErrorException();
     }
   }
+
+  async remove(payload: PlaylistContentDto) {
+    try {
+      return await this.playlistContentRepository
+        .createQueryBuilder('playlist_content')
+        .delete()
+        .where('playlistId = :playlistId', { playlistId: payload.playlistId })
+        .andWhere('trackId IN (:...trackIds)', { trackIds: payload.trackIds })
+        .execute();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }
