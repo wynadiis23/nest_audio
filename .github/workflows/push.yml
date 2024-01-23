@@ -14,6 +14,11 @@ jobs:
           echo APP_PORT=${{ secrets.APP_PORT }} >> .env
           echo APP_FRONT_END_DOMAIN=${{ secrets.APP_FRONT_END_DOMAIN }} >> .env
           echo APP_TRACK_UPLOAD_LIMIT=${{ secrets.APP_TRACK_UPLOAD_LIMIT }} >> .env
+          echo APP_ACCESS_TOKEN_SECRET=${{ secrets.APP_ACCESS_TOKEN_SECRET }} >> .env
+          echo APP_ACCESS_TOKEN_EXP=${{ secrets.APP_ACCESS_TOKEN_EXP }} >> .env
+          echo APP_REFRESH_TOKEN_SECRET=${{ secrets.APP_REFRESH_TOKEN_SECRET }} >> .env
+          echo APP_REFRESH_TOKEN_SECRET=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
+          echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
           echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
