@@ -15,6 +15,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
+import { GetMetadataDto } from '../tracks-metadata/dto/get-metadata.dto';
 
 @Injectable()
 export class TracksService {
@@ -22,6 +24,7 @@ export class TracksService {
     @InjectRepository(Tracks)
     private readonly tracksRepository: Repository<Tracks>,
     private eventEmitter: EventEmitter2,
+    private readonly tracksMetadataService: TracksMetadataService,
   ) {}
 
   async list() {
@@ -47,7 +50,21 @@ export class TracksService {
       this.eventEmitter.emit('add-tracks', { track: null });
       const tracks = this.tracksRepository.create(payload.tracks);
 
-      return await this.tracksRepository.save(tracks);
+      const savedTracks = await this.tracksRepository.save(tracks);
+
+      // find metadata
+      const metadataToBeFound = savedTracks.map(
+        (track): GetMetadataDto => ({
+          id: track.id,
+          path: track.path,
+        }),
+      );
+
+      await this.tracksMetadataService.getMetadata({
+        trackData: metadataToBeFound,
+      });
+
+      return savedTracks;
     } catch (error) {
       throw new InternalServerErrorException();
     }

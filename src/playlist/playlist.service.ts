@@ -7,6 +7,8 @@ import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { TracksService } from '../tracks/tracks.service';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
 import { PublishedStatusEnum } from './enum';
+import { Tracks } from '../tracks/entity/tracks.entity';
+import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 
 @Injectable()
 export class PlaylistService {
@@ -29,11 +31,23 @@ export class PlaylistService {
   }
 
   async list(publish: string) {
-    return await this.playlistRepository.find({
-      where: {
-        published: parseInt(publish),
-      },
-    });
+    const query = this.playlistRepository
+      .createQueryBuilder('playlist')
+      .leftJoin(
+        PlaylistContent,
+        'playlist_content',
+        'playlist_content.playlistId = playlist.id',
+      )
+      .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+      .leftJoinAndMapMany(
+        'playlist.content',
+        TracksMetadata,
+        'tracks_metadata',
+        'tracks_metadata.trackId = tracks.id',
+      )
+      .where('playlist.published = :publish', { publish });
+
+    return await query.getMany();
   }
 
   async detail(id: string) {
