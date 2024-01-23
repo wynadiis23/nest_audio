@@ -11,6 +11,7 @@ import { SharedEntity } from '../../common/entity/shared.entity';
 import { Exclude } from 'class-transformer';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Token } from '../../token/entity/token.entity';
+import { UserRole } from '../../user-role/entity/user-role.entity';
 
 @Entity({ name: 'user' })
 @Unique(['username'])
@@ -22,13 +23,19 @@ export class User extends SharedEntity {
   @Column({ nullable: false })
   password: string;
 
-  @Column({ default: 1 })
+  @Column({ default: 1, comment: '1 for active and 0 for inactive' })
   isActive: number;
 
   @OneToMany(() => Token, (token) => token.user, {
     cascade: true,
   })
   refreshTokens: Token[];
+
+  @OneToMany(() => UserRole, (userRole) => userRole.user, {
+    cascade: true,
+    eager: true,
+  })
+  roles: UserRole[];
 
   @BeforeInsert()
   @BeforeUpdate()

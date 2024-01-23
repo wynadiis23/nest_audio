@@ -12,11 +12,12 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticationService } from './authentication.service';
 import { SignInDto, SignUpDto } from './dto';
 import { Response } from 'express';
-import { LocalAuthGuard, RefreshTokenAuthGuard } from './guard';
-import { GetAuthorizedUser, Public } from './decorator';
+import { LocalAuthGuard, RefreshTokenAuthGuard, RolesGuard } from './guard';
+import { GetAuthorizedUser, Public, Roles } from './decorator';
 import { AuthorizedUserType } from './types';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 import { ConfigService } from '@nestjs/config';
+import { RoleEnum } from '../user-role/enum';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -56,6 +57,8 @@ export class AuthenticationController {
 
   @Post('sign-up')
   @ApiBearerAuth()
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
   @ApiBody({
     type: SignUpDto,
     required: true,

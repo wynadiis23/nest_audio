@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
+  ArrayNotEmpty,
+  IsEnum,
   IsNotEmpty,
   IsString,
   Length,
@@ -8,6 +10,7 @@ import {
   Validate,
 } from 'class-validator';
 import { IsNotExist } from '../../common/validator';
+import { RoleEnum } from '../../user-role/enum';
 
 export class SignUpDto {
   @ApiProperty({
@@ -66,4 +69,16 @@ export class SignUpDto {
     message: 'password must contain at least one non-word letter',
   })
   password: string;
+
+  @ApiProperty({
+    name: 'roles',
+    isArray: true,
+    enum: RoleEnum,
+    required: true,
+    description: 'ROOT | GENERAL',
+    example: ['GENERAL'],
+  })
+  @ArrayNotEmpty()
+  @IsEnum(RoleEnum, { each: true })
+  roles: RoleEnum[];
 }

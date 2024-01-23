@@ -9,6 +9,7 @@ export const GetAuthorizedUser = createParamDecorator(
     return {
       id: auth.sub,
       username: auth.username,
+      roles: auth.roles,
       tf: auth.tf,
     };
   },
