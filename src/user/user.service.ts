@@ -1,7 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
+import { UserRole } from '../user-role/entity/user-role.entity';
 
 @Injectable()
 export class UserService {
@@ -10,10 +11,16 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(username: string, password: string) {
+  async create(username: string, password: string, roles: string[]) {
     try {
       const data = this.userRepository.create({ username, password });
 
+      const userRole = roles.map((role) => ({
+        userId: data.id,
+        code: role,
+      }));
+
+      data.roles = userRole as unknown as UserRole[];
       return await this.userRepository.save(data);
     } catch (error) {
       throw new InternalServerErrorException();

@@ -2,20 +2,17 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { SharedEntity } from '../../common/entity/shared.entity';
 import { User } from '../../user/entity/user.entity';
 
-@Entity({ name: 'token' })
-export class Token extends SharedEntity {
-  @Column({ name: 'refresh_token' })
-  refreshToken: string;
+@Entity({ name: 'user_role' })
+export class UserRole extends SharedEntity {
+  @Column({ name: 'role', length: 128 })
+  code: string;
 
   @Column({ name: 'user_id' })
   userId: string;
 
-  @ManyToOne(() => User, (user) => user.refreshTokens, {
-    onDelete: 'CASCADE',
+  @ManyToOne(() => User, (user) => user.roles, {
+    orphanedRowAction: 'delete',
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
-
-  @Column({ name: 'token_family_id' })
-  tokenFamilyId: string;
 }

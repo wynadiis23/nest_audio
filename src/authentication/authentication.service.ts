@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -53,9 +54,14 @@ export class AuthenticationService {
 
   async signUp(payload: SignUpDto) {
     try {
+      if (!payload.roles.length) {
+        throw new BadRequestException('roles should not be empty');
+      }
+
       const user = await this.userService.create(
         payload.username,
         payload.password,
+        payload.roles,
       );
 
       // access token and refresh token
@@ -96,18 +102,24 @@ export class AuthenticationService {
     username: string,
     tf?: string,
   ): Promise<{ accessToken: string; refreshToken: string; tf: string }> {
+    // find latest data for user
+    const user = await this.userService.findOneById(id);
+    const roles = user.roles.map((role) => role.code);
+
     let payload: tokenPayload;
     if (tf) {
       payload = {
         sub: id,
-        username,
+        username: user.username,
+        roles: roles,
         tf,
       };
     } else {
       const tf = uuid();
       payload = {
         sub: id,
-        username,
+        username: user.username,
+        roles: roles,
         tf,
       };
     }
