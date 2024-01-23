@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsString } from 'class-validator';
 
 export class PlaylistContentDto {
   @ApiProperty({

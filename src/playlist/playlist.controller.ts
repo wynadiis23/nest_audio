@@ -77,6 +77,10 @@ export class PlaylistController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePlaylistDto,
   ) {
-    return await this.playlistService.update(id, dto);
+    await this.playlistService.update(id, dto);
+
+    return {
+      message: 'successfully update playlist',
+    };
   }
 }

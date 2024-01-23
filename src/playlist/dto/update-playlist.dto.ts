@@ -1,9 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { PlaylistDto } from './playlist.dto';
-import { ArrayNotEmpty, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 import { PublishedStatusEnum } from '../enum';
+import { Optional } from '@nestjs/common';
 
-export class UpdatePlaylistDto extends PlaylistDto {
+export class UpdatePlaylistDto extends PartialType(PlaylistDto) {
   @ApiProperty({
     name: 'id',
     type: 'string',
@@ -23,8 +24,7 @@ export class UpdatePlaylistDto extends PlaylistDto {
     description: '81daa1e8-0eaf-4c11-907e-cb62f46b615f',
     example: ['81daa1e8-0eaf-4c11-907e-cb62f46b615f'],
   })
-  @ArrayNotEmpty()
-  @IsNotEmpty()
+  @Optional()
   trackIds?: string[];
 
   @ApiProperty({
@@ -35,7 +35,6 @@ export class UpdatePlaylistDto extends PlaylistDto {
     description: 'Playlist published status',
     example: '1',
   })
-  @IsUUID(4)
   @IsNotEmpty()
   publish?: PublishedStatusEnum;
 }

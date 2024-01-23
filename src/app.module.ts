@@ -29,6 +29,7 @@ import {
 } from './authentication/strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenAuthGuard } from './authentication/guard';
+import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { AccessTokenAuthGuard } from './authentication/guard';
     AuthenticationModule,
     UserModule,
     TokenModule,
+    TracksMetadataModule,
   ],
   controllers: [AppController],
   providers: [
