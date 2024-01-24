@@ -6,6 +6,7 @@ import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,6 +30,9 @@ async function bootstrap() {
 
   app.use(express.json({ limit: '100mb' }));
   app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+  // Public Folder
+  app.use('/public', express.static(join(__dirname, '..', 'public')));
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 

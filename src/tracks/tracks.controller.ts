@@ -4,6 +4,7 @@ import {
   Get,
   Header,
   Headers,
+  Logger,
   Param,
   Post,
   Query,
@@ -144,9 +145,8 @@ export class TracksController {
         'Content-Disposition': `inline; filename="${trackMetadata.name}"`,
         'Content-Length': `${stat.size}`,
       });
-
-      return new StreamableFile(file).setErrorHandler((err) => {
-        console.log(err.message, 'asu');
+      return new StreamableFile(file).setErrorLogger((err) => {
+        Logger.warn(err.message, 'Streamable');
       });
     }
     const { streamableFile, contentRange } =

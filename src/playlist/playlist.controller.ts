@@ -56,6 +56,7 @@ export class PlaylistController {
     )
     published: PublishedStatusEnum,
   ) {
+    // add role check here, if role is admin, return all playlist. if general do not include user specified playlist
     return await this.playlistService.list(published);
   }
 
