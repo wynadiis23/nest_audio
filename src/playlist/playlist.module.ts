@@ -9,5 +9,6 @@ import { TracksModule } from '../tracks/tracks.module';
   imports: [TypeOrmModule.forFeature([Playlist]), TracksModule],
   providers: [PlaylistService],
   controllers: [PlaylistController],
+  exports: [PlaylistService],
 })
 export class PlaylistModule {}
