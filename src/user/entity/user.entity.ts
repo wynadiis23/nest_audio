@@ -12,6 +12,7 @@ import { Exclude } from 'class-transformer';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Token } from '../../token/entity/token.entity';
 import { UserRole } from '../../user-role/entity/user-role.entity';
+import { UserPlaylist } from '../../user-playlist/entity/user-playlist.entity';
 
 @Entity({ name: 'user' })
 @Unique(['username'])
@@ -36,6 +37,9 @@ export class User extends SharedEntity {
     eager: true,
   })
   roles: UserRole[];
+
+  @OneToMany(() => UserPlaylist, (userPlaylist) => userPlaylist.user)
+  userPlaylists: UserPlaylist[];
 
   @BeforeInsert()
   @BeforeUpdate()

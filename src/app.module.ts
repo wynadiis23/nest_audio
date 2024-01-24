@@ -20,7 +20,11 @@ import { RedisCacheModule } from './redis-cache/redis-cache.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { UserModule } from './user/user.module';
-import { IsNotExist } from './common/validator';
+import {
+  IsNotExist,
+  PlaylistExistsValidation,
+  UserExistsValidation,
+} from './common/validator';
 import { TokenModule } from './token/token.module';
 import {
   JwtRefreshTokenStrategy,
@@ -30,6 +34,7 @@ import {
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenAuthGuard } from './authentication/guard';
 import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
+import { UserPlaylistModule } from './user-playlist/user-playlist.module';
 
 @Module({
   imports: [
@@ -60,11 +65,14 @@ import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
     UserModule,
     TokenModule,
     TracksMetadataModule,
+    UserPlaylistModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     IsNotExist,
+    UserExistsValidation,
+    PlaylistExistsValidation,
     LocalStrategy,
     JwtStrategy,
     JwtRefreshTokenStrategy,
