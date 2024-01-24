@@ -13,6 +13,8 @@ import { PlaylistContent } from '../playlist-content/entity/playlist-content.ent
 import { PublishedStatusEnum } from './enum';
 import { Tracks } from '../tracks/entity/tracks.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
+import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
+import { User } from '../user/entity/user.entity';
 
 @Injectable()
 export class PlaylistService {
@@ -69,6 +71,18 @@ export class PlaylistService {
           TracksMetadata,
           'tracks_metadata',
           'tracks_metadata.trackId = tracks.id',
+        )
+        // will be checked by role. if role is admin. return all
+        .leftJoin(
+          UserPlaylist,
+          'user_playlist',
+          'user_playlist.playlistId = playlist.id',
+        )
+        .leftJoinAndMapMany(
+          'playlist.users',
+          User,
+          'user',
+          'user_playlist.userId = user.id',
         )
         .where('playlist.id = :id', { id });
 

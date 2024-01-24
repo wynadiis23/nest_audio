@@ -68,6 +68,20 @@ export class UserPlaylistService {
     }
   }
 
+  async remove(userId: string, playlistId: string) {
+    try {
+      const query = this.userPlaylistRepository
+        .createQueryBuilder('up')
+        .delete()
+        .where('userId = :userId', { userId })
+        .andWhere('playlistId = :playlistId', { playlistId });
+
+      return await query.execute();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
   createHash(userId: string, playlistId: string) {
     return crypto
       .createHash('sha1')

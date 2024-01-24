@@ -11,8 +11,6 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { PlaylistModule } from './playlist/playlist.module';
 import { PlaylistContentModule } from './playlist-content/playlist-content.module';
 import { StreamStatusModule } from './stream-status/stream-status.module';
@@ -52,9 +50,9 @@ import { UserPlaylistModule } from './user-playlist/user-playlist.module';
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..'),
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..'),
+    // }),
     EventEmitterModule.forRoot(),
     TracksModule,
     PlaylistModule,
