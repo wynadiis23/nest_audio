@@ -19,6 +19,7 @@ import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.servic
 import { GetMetadataDto } from '../tracks-metadata/dto/get-metadata.dto';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
+import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 
 @Injectable()
 export class TracksService {
@@ -30,7 +31,27 @@ export class TracksService {
   ) {}
 
   async list() {
-    return await this.tracksRepository.find();
+    const query = this.tracksRepository
+      .createQueryBuilder('tracks')
+      .leftJoinAndMapOne(
+        'tracks.metadata',
+        TracksMetadata,
+        'tracks_metadata',
+        'tracks_metadata.trackId = tracks.id',
+      )
+      .leftJoin(
+        PlaylistContent,
+        'playlist_content',
+        'playlist_content.trackId = tracks.id',
+      )
+      .leftJoinAndMapMany(
+        'tracks.playlist',
+        Playlist,
+        'playlist',
+        'playlist_content.playlistId = playlist.id',
+      );
+
+    return await query.getMany();
   }
 
   async getAvailableTrackForPlaylist(playlistId: string) {
