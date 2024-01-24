@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Playlist } from './entity/playlist.entity';
 import { DeepPartial, Repository } from 'typeorm';
@@ -76,6 +80,9 @@ export class PlaylistService {
 
   async update(id: string, payload: UpdatePlaylistDto) {
     try {
+      if (id !== payload.id) {
+        throw new BadRequestException('invalid playlist id');
+      }
       let data: Playlist;
 
       if (payload.trackIds) {
@@ -110,6 +117,9 @@ export class PlaylistService {
 
       return await this.playlistRepository.save(data);
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
