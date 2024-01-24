@@ -34,7 +34,7 @@ export class TracksService {
     const query = this.tracksRepository
       .createQueryBuilder('tracks')
       .leftJoinAndMapOne(
-        'tracks.metadata',
+        'tracks.trackMetadata',
         TracksMetadata,
         'tracks_metadata',
         'tracks_metadata.trackId = tracks.id',
