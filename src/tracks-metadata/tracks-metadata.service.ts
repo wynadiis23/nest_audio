@@ -1,10 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksMetadata } from './entity/tracks-metadata.entity';
 import { Repository } from 'typeorm';
 import { parseFile } from 'music-metadata';
 import { join } from 'path';
-import { GetMultipleMetadataDto } from './dto';
+import { GetMultipleMetadataDto, UpdateMetadataDto } from './dto';
 import { tracksMetadata } from './type/tracks-metadata.type';
 
 @Injectable()
@@ -44,6 +48,22 @@ export class TracksMetadataService {
 
       return await this.tracksMetadataRepository.save(data);
     } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async update(id: string, payload: UpdateMetadataDto) {
+    try {
+      if (id !== payload.id) {
+        throw new BadRequestException('invalid track metadata id');
+      }
+      const data = this.tracksMetadataRepository.create({ id, ...payload });
+
+      return await this.tracksMetadataRepository.save(data);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
