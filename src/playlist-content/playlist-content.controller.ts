@@ -12,10 +12,17 @@ export class PlaylistContentController {
     private readonly playlistContentService: PlaylistContentService,
   ) {}
 
-  @ApiOperation({ summary: 'Add tracks to playlist' })
+  @ApiOperation({ summary: 'Add track/tracks to playlist' })
   @ApiBody({ type: PlaylistContentDto, required: true })
   @Post()
   async create(@Body() dto: PlaylistContentDto) {
     return await this.playlistContentService.create(dto);
+  }
+
+  @ApiOperation({ summary: 'Remove track/tracks to playlist' })
+  @ApiBody({ type: PlaylistContentDto, required: true })
+  @Post('/remove')
+  async remove(@Body() dto: PlaylistContentDto) {
+    return await this.playlistContentService.remove(dto);
   }
 }
