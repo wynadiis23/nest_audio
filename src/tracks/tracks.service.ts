@@ -182,10 +182,47 @@ export class TracksService {
     }
   }
 
+  async findByTrackId(id: string) {
+    try {
+      return await this.tracksRepository
+        .createQueryBuilder('tracks')
+        .leftJoinAndMapOne(
+          'tracks.trackMetadata',
+          TracksMetadata,
+          'tracks_metadata',
+          'tracks_metadata.trackId = tracks.id',
+        )
+        .where('tracks.id = :id', { id })
+        .getOne();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
   async delete(id: string) {
     try {
+      const track = await this.findByTrackId(id);
+
+      if (!track) {
+        throw new BadRequestException('invalid track id');
+      }
+
+      fs.unlink(join(__dirname, '../..', track.path), (error) => {
+        if (error) {
+          throw new BadRequestException(
+            'error while delete file on disk',
+            error.message,
+          );
+        } else {
+          Logger.warn('Delete file on disk', 'TracksService');
+        }
+      });
+
       return await this.tracksRepository.delete(id);
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
@@ -305,8 +342,36 @@ export class TracksService {
 
   async deleteAllTrack() {
     try {
+      // fix this magic string later
+      const path = '/public/files/tracks';
+      const directory = join(__dirname, '../..', path);
+
+      fs.readdir(directory, (err, files) => {
+        if (err) {
+          throw new BadRequestException(
+            `error while reading directory ${directory}`,
+            err.message,
+          );
+        }
+        for (const file of files) {
+          fs.unlink(join(directory, file), (err) => {
+            if (err) {
+              throw new BadRequestException(
+                `error while delete file on disk`,
+                err.message,
+              );
+            } else {
+              Logger.warn('Delete file on disk', 'TracksService');
+            }
+          });
+        }
+      });
+
       return await this.tracksRepository.query(`DELETE FROM tracks`);
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
