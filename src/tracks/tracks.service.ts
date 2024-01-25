@@ -121,6 +121,7 @@ export class TracksService {
           const metadata = await this.tracksMetadataService.getMetadata({
             id: track.id,
             path: track.path,
+            name: track.name,
           });
 
           this.eventEmitter.emit('add-tracks', {
