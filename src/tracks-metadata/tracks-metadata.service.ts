@@ -30,7 +30,7 @@ export class TracksMetadataService {
 
       const info: tracksMetadata = {
         trackId: payload.id,
-        name: metadata.common.title,
+        name: metadata.common.title ?? payload.name,
         album: metadata.common.album,
         artist: metadata.common.artist,
         duration: metadata.format.duration.toString(),
