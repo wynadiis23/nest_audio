@@ -112,9 +112,13 @@ export class TracksController {
 
     // fetch metadata using music metadata package
 
-    return await this.tracksService.createMultiple({
+    await this.tracksService.createMultiple({
       tracks: tracks,
     });
+
+    return {
+      message: 'successfully added track/tracks',
+    };
   }
 
   @Get(':id')
