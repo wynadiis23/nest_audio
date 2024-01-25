@@ -23,7 +23,9 @@ export class TracksMetadata extends SharedEntity {
   @Column({ name: 'track_id' })
   trackId: string;
 
-  @OneToOne(() => Tracks, (tracks) => tracks.trackMetadata)
+  @OneToOne(() => Tracks, (tracks) => tracks.trackMetadata, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'track_id' })
   track: Tracks;
 }
