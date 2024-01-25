@@ -98,6 +98,17 @@ export class TracksService {
 
   async createMultiple(payload: MultipleTracksDto) {
     try {
+      // find already uploaded track by it original file name
+      const originalFileNames = payload.tracks.map((track) => track.name);
+      const exclude = await this.findByTrackName(originalFileNames);
+
+      if (Array.isArray(exclude)) {
+        const excludeTracks = exclude.map((track) => track.name);
+        payload.tracks = payload.tracks.filter(
+          (track) => !excludeTracks.includes(track.name),
+        );
+      }
+
       for (const track of payload.tracks) {
         this.eventEmitter.emit('add-tracks', {
           track: track.name,
@@ -146,6 +157,26 @@ export class TracksService {
       } finally {
         await queryRunner.release();
       }
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async findByTrackName(names: string[] | string): Promise<Tracks | Tracks[]> {
+    try {
+      if (Array.isArray(names)) {
+        return await this.tracksRepository.find({
+          where: {
+            name: In(names),
+          },
+        });
+      }
+
+      return await this.tracksRepository.findOne({
+        where: {
+          name: names,
+        },
+      });
     } catch (error) {
       throw new InternalServerErrorException();
     }
