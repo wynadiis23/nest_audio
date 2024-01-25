@@ -17,8 +17,25 @@ interface LocalFilesInterceptorOptions {
   path?: string;
   fileFilter?: MulterOptions['fileFilter'];
 }
+// fix later
+const path = '/public/files/';
+const extra = '/tracks';
 
 const trackFilter = (req, file, cb) => {
+  const name = file.originalname.split(' ').join('-');
+  const dir = join(__dirname, '../..', `${path}${extra}`);
+
+  // create folder if not exists
+  fs.mkdirSync(dir, { recursive: true });
+
+  const dirCont = fs.readdirSync(dir);
+  const files = dirCont.filter((elm) => elm.startsWith(name));
+
+  if (files.length) {
+    cb(null, false);
+    return;
+  }
+
   if (!file.mimetype.includes('audio')) {
     return cb(new BadRequestException('Provide a valid audio'), false);
   }
@@ -32,8 +49,6 @@ function MultipleTrackUploadFilesInterceptor(
   class Interceptor implements NestInterceptor {
     filesInterceptor: NestInterceptor;
     constructor(configService: ConfigService) {
-      const path = '/public/files/';
-
       const trackUploadLimit = configService.get<number>(
         'APP_TRACK_UPLOAD_LIMIT',
       );
