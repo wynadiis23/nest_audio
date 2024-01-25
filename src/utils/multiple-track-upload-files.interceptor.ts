@@ -19,9 +19,10 @@ interface LocalFilesInterceptorOptions {
 }
 // fix later
 const path = '/public/files/';
-const extra = '/tracks';
 
 const trackFilter = (req, file, cb) => {
+  /*
+  const extra = '/tracks';
   const name = file.originalname.split(' ').join('-');
   const dir = join(__dirname, '../..', `${path}${extra}`);
 
@@ -35,7 +36,7 @@ const trackFilter = (req, file, cb) => {
     cb(null, false);
     return;
   }
-
+*/
   if (!file.mimetype.includes('audio')) {
     return cb(new BadRequestException('Provide a valid audio'), false);
   }
