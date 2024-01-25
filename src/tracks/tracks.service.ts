@@ -11,13 +11,12 @@ import { createReadStream } from 'fs';
 import * as fs from 'fs';
 import * as rangeParser from 'range-parser';
 import { Tracks } from './entity/tracks.entity';
-import { In, Not, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
-import { GetMetadataDto } from '../tracks-metadata/dto/get-metadata.dto';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
@@ -29,6 +28,7 @@ export class TracksService {
     private readonly tracksRepository: Repository<Tracks>,
     private eventEmitter: EventEmitter2,
     private readonly tracksMetadataService: TracksMetadataService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async list() {
@@ -99,27 +99,52 @@ export class TracksService {
   async createMultiple(payload: MultipleTracksDto) {
     try {
       for (const track of payload.tracks) {
-        this.eventEmitter.emit('add-tracks', { track: track.name });
+        this.eventEmitter.emit('add-tracks', {
+          track: track.name,
+          status: 'adding tracks',
+        });
       }
-      // fix later
-      this.eventEmitter.emit('add-tracks', { track: null });
-      const tracks = this.tracksRepository.create(payload.tracks);
 
-      const savedTracks = await this.tracksRepository.save(tracks);
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      // find metadata
-      const metadataToBeFound = savedTracks.map(
-        (track): GetMetadataDto => ({
-          id: track.id,
-          path: track.path,
-        }),
-      );
+      try {
+        const tracks = queryRunner.manager.create(
+          Tracks,
+          payload.tracks as unknown as Tracks[],
+        );
 
-      await this.tracksMetadataService.getMetadata({
-        trackData: metadataToBeFound,
-      });
+        const savedTracks = await queryRunner.manager.save(tracks);
 
-      return savedTracks;
+        for (const track of savedTracks) {
+          const metadata = await this.tracksMetadataService.getMetadata({
+            id: track.id,
+            path: track.path,
+          });
+
+          this.eventEmitter.emit('add-tracks', {
+            track: track.name,
+            status: 'getting metadata',
+          });
+          await this.tracksMetadataService.create(metadata, queryRunner);
+        }
+
+        // commit all transaction
+        await queryRunner.commitTransaction();
+
+        this.eventEmitter.emit('add-tracks', {
+          track: null,
+          status: null,
+        });
+        return savedTracks;
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+
+        throw new InternalServerErrorException();
+      } finally {
+        await queryRunner.release();
+      }
     } catch (error) {
       throw new InternalServerErrorException();
     }

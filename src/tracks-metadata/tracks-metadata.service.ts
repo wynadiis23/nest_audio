@@ -5,46 +5,58 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksMetadata } from './entity/tracks-metadata.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { parseFile } from 'music-metadata';
 import { join } from 'path';
-import { GetMultipleMetadataDto, UpdateMetadataDto } from './dto';
+import { CreateMetadataDto, UpdateMetadataDto } from './dto';
 import { tracksMetadata } from './type/tracks-metadata.type';
+import { Tracks } from '../tracks/entity/tracks.entity';
+import { GetMetadataDto } from './dto/get-metadata.dto';
 
 @Injectable()
 export class TracksMetadataService {
   constructor(
     @InjectRepository(TracksMetadata)
     private readonly tracksMetadataRepository: Repository<TracksMetadata>,
+    @InjectRepository(Tracks)
+    private readonly tracksRepository: Repository<Tracks>,
   ) {}
 
-  async getMetadata(payload: GetMultipleMetadataDto) {
+  async getMetadata(payload: GetMetadataDto) {
     try {
-      const trackMetadata: {
-        trackId: string;
-        name: string;
-        album: string;
-        artist: string;
-        duration: string;
-      }[] = [];
+      const metadata = await parseFile(join(__dirname, '../..', payload.path), {
+        duration: true,
+      });
 
-      for (const track of payload.trackData) {
-        const metadata = await parseFile(join(__dirname, '../..', track.path), {
-          duration: true,
-        });
+      const info: tracksMetadata = {
+        trackId: payload.id,
+        name: metadata.common.title,
+        album: metadata.common.album,
+        artist: metadata.common.artist,
+        duration: metadata.format.duration.toString(),
+      };
 
-        const info: tracksMetadata = {
-          trackId: track.id,
-          name: metadata.common.title,
-          album: metadata.common.album,
-          artist: metadata.common.artist,
-          duration: metadata.format.duration.toString(),
-        };
+      return info;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 
-        trackMetadata.push(info);
+  // transaction from parent create multiple tracks in tracks service
+  async create(payload: CreateMetadataDto, queryRunner?: QueryRunner) {
+    try {
+      if (queryRunner) {
+        // continue transaction from tracks service
+        const metadata = queryRunner.manager.create(
+          TracksMetadata,
+          payload as unknown as TracksMetadata[],
+        );
+
+        return await queryRunner.manager.save(metadata);
+        // will be committed in tracks service
       }
 
-      const data = this.tracksMetadataRepository.create(trackMetadata);
+      const data = this.tracksMetadataRepository.create(payload);
 
       return await this.tracksMetadataRepository.save(data);
     } catch (error) {
@@ -57,6 +69,13 @@ export class TracksMetadataService {
       if (id !== payload.id) {
         throw new BadRequestException('invalid track metadata id');
       }
+
+      // find tracks
+      // const track = await this.tracksRepository.findOne({
+      //   where: {
+      //     id: payload.trackId
+      //   }
+      // })
       const data = this.tracksMetadataRepository.create({ id, ...payload });
 
       return await this.tracksMetadataRepository.save(data);
