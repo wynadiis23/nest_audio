@@ -4,7 +4,6 @@ import {
   Get,
   Header,
   Headers,
-  Logger,
   Param,
   Post,
   Query,
@@ -16,9 +15,6 @@ import {
 } from '@nestjs/common';
 import { TracksService } from './tracks.service';
 import { Response } from 'express';
-import { createReadStream } from 'fs';
-import * as fs from 'fs';
-import { join } from 'path';
 import MultipleTrackUploadFilesInterceptor from '../utils/multiple-track-upload-files.interceptor';
 import { TracksDto } from './dto';
 import {
@@ -134,20 +130,7 @@ export class TracksController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     if (!range) {
-      const trackMetadata = await this.tracksService.getTrackMetadata(id);
-      const stat = fs.statSync(join(__dirname, '../..', trackMetadata.path));
-
-      const file = createReadStream(
-        join(__dirname, '../..', trackMetadata.path),
-      );
-      res.header({
-        'Content-Type': `${trackMetadata.mimetype}`,
-        'Content-Disposition': `inline; filename="${trackMetadata.name}"`,
-        'Content-Length': `${stat.size}`,
-      });
-      return new StreamableFile(file).setErrorLogger((err) => {
-        Logger.warn(err.message, 'Streamable');
-      });
+      return await this.tracksService.getTrackStreamById(id);
     }
     const { streamableFile, contentRange } =
       await this.tracksService.getPartialTrackStream(id, range);

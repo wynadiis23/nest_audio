@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
@@ -171,7 +172,7 @@ export class TracksService {
   }
 
   getFileSize(path: string) {
-    const stat = fs.statSync(join(__dirname, '../..', path));
+    const stat = fs.statSync(path);
     return stat.size;
   }
 
@@ -180,39 +181,69 @@ export class TracksService {
   }
 
   async getPartialTrackStream(id: string, range: string) {
-    const trackMetadata = await this.getTrackMetadata(id);
-    const trackPath = trackMetadata.path;
-    const fileSize = this.getFileSize(trackPath);
+    try {
+      const trackMetadata = await this.getTrackMetadata(id);
+      const trackPath = join(__dirname, '../..', trackMetadata.path);
 
-    const { start, end } = this.parseRange(range, fileSize);
+      const fileExist = await this.checkFileExist(trackPath);
+      if (!fileExist) {
+        throw new BadRequestException('File not found');
+      }
 
-    const stream = createReadStream(join(__dirname, '../..', trackPath), {
-      start,
-      end,
-    });
+      const fileSize = this.getFileSize(trackPath);
 
-    const streamableFile = new StreamableFile(stream, {
-      disposition: `inline; filename="${trackMetadata.name}"`,
-      type: trackMetadata.mimetype,
-    });
+      const { start, end } = this.parseRange(range, fileSize);
 
-    const contentRange = this.getContentRange(start, end, fileSize);
+      const stream = createReadStream(trackPath, {
+        start,
+        end,
+      });
 
-    return {
-      streamableFile,
-      contentRange,
-    };
+      const streamableFile = new StreamableFile(stream, {
+        disposition: `inline; filename="${trackMetadata.name}"`,
+        type: trackMetadata.mimetype,
+      });
+
+      const contentRange = this.getContentRange(start, end, fileSize);
+
+      return {
+        streamableFile,
+        contentRange,
+      };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async getTrackStreamById(id: string) {
-    const trackMetadata = await this.getTrackMetadata(id);
+    try {
+      const trackMetadata = await this.getTrackMetadata(id);
+      const trackPath = join(__dirname, '../..', trackMetadata.path);
 
-    const stream = createReadStream(trackMetadata.path);
+      const fileExist = await this.checkFileExist(trackPath);
 
-    return new StreamableFile(stream, {
-      disposition: `inline; filename="${trackMetadata.name}"`,
-      type: trackMetadata.mimetype,
-    });
+      if (!fileExist) {
+        throw new BadRequestException('File not found');
+      }
+
+      const stream = createReadStream(trackPath);
+
+      return new StreamableFile(stream, {
+        disposition: `inline; filename="${trackMetadata.name}"`,
+        type: trackMetadata.mimetype,
+      }).setErrorLogger((error) => {
+        Logger.warn(error.message, 'Streamable');
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async deleteAllTrack() {
@@ -221,5 +252,11 @@ export class TracksService {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  async checkFileExist(path: string): Promise<boolean> {
+    const file = fs.existsSync(path);
+
+    return file;
   }
 }
