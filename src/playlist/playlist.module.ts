@@ -3,10 +3,10 @@ import { PlaylistService } from './playlist.service';
 import { PlaylistController } from './playlist.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Playlist } from './entity/playlist.entity';
-import { TracksModule } from '../tracks/tracks.module';
+import { TracksMetadataModule } from '../tracks-metadata/tracks-metadata.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Playlist]), TracksModule],
+  imports: [TypeOrmModule.forFeature([Playlist]), TracksMetadataModule],
   providers: [PlaylistService],
   controllers: [PlaylistController],
   exports: [PlaylistService],
