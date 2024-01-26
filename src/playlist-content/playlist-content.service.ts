@@ -46,4 +46,21 @@ export class PlaylistContentService {
       throw new InternalServerErrorException();
     }
   }
+
+  // async update(id: string, payload: UpdatePlaylistContentDto) {
+  //   try {
+  //     if (id !== payload.id) {
+  //       throw new BadRequestException('invalid playlist content id');
+  //     }
+
+  //     const data = this.playlistContentRepository.create({ id, ...payload });
+
+  //     return await this.playlistContentRepository.save(data);
+  //   } catch (error) {
+  //     if (error instanceof BadRequestException) {
+  //       throw new BadRequestException(error.message);
+  //     }
+  //     throw new InternalServerErrorException();
+  //   }
+  // }
 }
