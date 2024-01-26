@@ -13,6 +13,8 @@ import { PublishedStatusEnum } from './enum';
 import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
 import { User } from '../user/entity/user.entity';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
+import { Tracks } from '../tracks/entity/tracks.entity';
+import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 
 @Injectable()
 export class PlaylistService {
@@ -37,11 +39,17 @@ export class PlaylistService {
   async list(publish: string) {
     const query = this.playlistRepository
       .createQueryBuilder('playlist')
-      .leftJoinAndMapMany(
-        'playlist.playlistContents',
+      .leftJoin(
         PlaylistContent,
         'playlist_content',
         'playlist_content.playlistId = playlist.id',
+      )
+      .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+      .leftJoinAndMapMany(
+        'playlist.contentMetadata',
+        TracksMetadata,
+        'tracks_metadata',
+        'tracks_metadata.trackId = tracks.id',
       )
       .where('playlist.published = :publish', { publish });
 
@@ -52,11 +60,17 @@ export class PlaylistService {
     try {
       const query = this.playlistRepository
         .createQueryBuilder('playlist')
-        .leftJoinAndMapMany(
-          'playlist.playlistContents',
+        .leftJoin(
           PlaylistContent,
           'playlist_content',
           'playlist_content.playlistId = playlist.id',
+        )
+        .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+        .leftJoinAndMapMany(
+          'playlist.contentMetadata',
+          TracksMetadata,
+          'tracks_metadata',
+          'tracks_metadata.trackId = tracks.id',
         )
         // will be checked by role. if role is admin. return all
         .leftJoin(
@@ -95,11 +109,7 @@ export class PlaylistService {
           (track): DeepPartial<PlaylistContent> => ({
             trackId: track.trackId,
             playlistId: id,
-            name: track.name,
-            album: track.album,
-            artist: track.artist,
-            duration: track.duration,
-            coverPath: track.coverPath,
+            trackName: track.name,
           }),
         );
 

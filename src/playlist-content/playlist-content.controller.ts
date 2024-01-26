@@ -25,7 +25,14 @@ export class PlaylistContentController {
 
   @ApiOperation({ summary: 'Remove playlist content' })
   @ApiQuery({
-    name: 'id',
+    name: 'playlistId',
+    type: 'string',
+    required: true,
+    description: 'Id of playlist',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  @ApiQuery({
+    name: 'trackId',
     type: 'string',
     isArray: true,
     required: true,
@@ -33,8 +40,13 @@ export class PlaylistContentController {
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
   @Delete()
-  async delete(@Query('id') ids: string[]) {
-    await this.playlistContentService.remove(ids);
+  async delete(
+    @Query('playlistId') playlistId: string,
+    @Query('trackId') trackIds: string[],
+  ) {
+    console.log(playlistId);
+    console.log(trackIds);
+    await this.playlistContentService.remove2(trackIds, playlistId);
 
     return {
       message: 'successfully remove playlist content',

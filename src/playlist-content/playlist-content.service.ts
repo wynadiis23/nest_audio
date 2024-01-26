@@ -24,11 +24,7 @@ export class PlaylistContentService {
         (track): DeepPartial<PlaylistContent> => ({
           trackId: track.trackId,
           playlistId: payload.playlistId,
-          name: track.name,
-          album: track.album,
-          artist: track.artist,
-          duration: track.duration,
-          coverPath: track.coverPath,
+          trackName: track.name,
         }),
       );
 
@@ -44,6 +40,20 @@ export class PlaylistContentService {
   async remove(ids: string[]) {
     try {
       await this.playlistContentRepository.delete(ids);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async remove2(trackIds: string[], playlistId: string) {
+    try {
+      const deleteQuery = this.playlistContentRepository
+        .createQueryBuilder('playlist_content')
+        .delete()
+        .where('playlist_content.playlist_id = :playlistId', { playlistId })
+        .andWhere('playlist_content.track_id IN (:...trackIds)', { trackIds });
+
+      return await deleteQuery.execute();
     } catch (error) {
       throw new InternalServerErrorException();
     }
