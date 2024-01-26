@@ -26,6 +26,7 @@ export class PlaylistContentService {
       }));
 
       const datas = this.playlistContentRepository.create(tracks);
+      console.log(datas);
 
       await this.playlistContentRepository.save(datas);
     } catch (error) {

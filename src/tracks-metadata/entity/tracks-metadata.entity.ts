@@ -20,6 +20,9 @@ export class TracksMetadata extends SharedEntity {
   })
   duration: string;
 
+  @Column({ name: 'cover_path', nullable: true })
+  coverPath: string;
+
   @Column({ name: 'track_id' })
   trackId: string;
 
