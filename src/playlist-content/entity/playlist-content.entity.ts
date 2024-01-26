@@ -16,6 +16,7 @@ export class PlaylistContent extends SharedEntity {
 
   @ManyToOne(() => Playlist, (playlist) => playlist.playlistContents, {
     orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'playlist_id' })
   playlist: Playlist;
