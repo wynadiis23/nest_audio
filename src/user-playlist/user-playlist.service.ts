@@ -5,10 +5,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPlaylist } from './entity/user-playlist.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { AddUserPlaylistDto } from './dto';
 import * as crypto from 'crypto';
 import { Playlist } from '../playlist/entity/playlist.entity';
+import { User } from '../user/entity/user.entity';
 
 @Injectable()
 export class UserPlaylistService {
@@ -17,30 +18,40 @@ export class UserPlaylistService {
     private readonly userPlaylistRepository: Repository<UserPlaylist>,
     @InjectRepository(Playlist)
     private readonly playlistRepository: Repository<Playlist>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async add(payload: AddUserPlaylistDto) {
     try {
-      const hash = this.createHash(payload.userId, payload.playlistId);
+      const userPlaylist = [];
 
-      // validate duplicate hash
-      const duplicate = await this.userPlaylistRepository.findOne({
-        where: {
+      for (const id of payload.userId) {
+        // validate duplicate hash
+        const hash = this.createHash(id, payload.playlistId);
+        const duplicate = await this.userPlaylistRepository.findOne({
+          relations: {
+            user: true,
+          },
+          where: {
+            hash: hash,
+          },
+        });
+
+        if (duplicate) {
+          throw new BadRequestException(
+            `user ${duplicate.user.username} has already added to this playlist`,
+          );
+        }
+
+        userPlaylist.push({
+          userId: id,
+          playlistId: payload.playlistId,
           hash: hash,
-        },
-      });
-
-      if (duplicate) {
-        throw new BadRequestException(
-          'user has already added to this playlist',
-        );
+        });
       }
 
-      const data = this.userPlaylistRepository.create({
-        userId: payload.userId,
-        playlistId: payload.playlistId,
-        hash: hash,
-      });
+      const data = this.userPlaylistRepository.create(userPlaylist);
 
       return await this.userPlaylistRepository.save(data);
     } catch (error) {
@@ -51,7 +62,7 @@ export class UserPlaylistService {
     }
   }
 
-  async getUserPlaylist(userId: string) {
+  async getPublishedUserPlaylist(userId: string) {
     try {
       const query = this.playlistRepository
         .createQueryBuilder('playlist')
@@ -60,7 +71,8 @@ export class UserPlaylistService {
           'user_playlist',
           'user_playlist.playlistId = playlist.id',
         )
-        .where('user_playlist.userId = :userId', { userId });
+        .where('playlist.publish = 1')
+        .andWhere('user_playlist.userId = :userId', { userId });
 
       return await query.getMany();
     } catch (error) {
@@ -87,5 +99,46 @@ export class UserPlaylistService {
       .createHash('sha1')
       .update(`${userId}_${playlistId}`)
       .digest('hex');
+  }
+
+  async getAvailableUser(playlistId: string) {
+    try {
+      // const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+      // queryBuilder.leftJoin(
+      //   'user.userPlaylists',
+      //   'userPlaylist',
+      //   'userPlaylist.playlistId = :playlistId',
+      //   { playlistId },
+      // );
+
+      // queryBuilder.where('userPlaylist.id IS NULL');
+
+      // return await queryBuilder.getMany();
+
+      const addedUserPlaylist = await this.userPlaylistRepository.find({
+        select: ['userId'],
+        where: {
+          playlistId,
+        },
+      });
+
+      const notYetAddedUsers = this.userRepository
+        .createQueryBuilder('user')
+        .select('user.id', 'id')
+        .addSelect('user.username', 'username');
+
+      if (!addedUserPlaylist.length) {
+        return await notYetAddedUsers.getRawMany();
+      }
+
+      return await notYetAddedUsers
+        .where('user.id NOT IN (:...userIds)', {
+          userIds: addedUserPlaylist.map((userPlaylist) => userPlaylist.userId),
+        })
+        .getRawMany();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 }

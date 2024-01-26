@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  ParseUUIDPipe,
   Post,
   Query,
   Req,
@@ -42,7 +43,9 @@ export class UserPlaylistController {
       'Get list of playlist specified by user. user taken from token. (LISTENER)',
   })
   async getUserPlaylist(@Req() req: any) {
-    return await this.userPlaylistService.getUserPlaylist(req.user.sub);
+    return await this.userPlaylistService.getPublishedUserPlaylist(
+      req.user.sub,
+    );
   }
 
   @Delete()
@@ -73,5 +76,27 @@ export class UserPlaylistController {
     return {
       message: 'successfully remove user playlist',
     };
+  }
+
+  // get list of user that not yet added to given playlist
+  @Get('/get/available-user')
+  @Public()
+  @ApiOperation({
+    summary: 'Get all user that not yet added to given playlist',
+  })
+  @ApiQuery({
+    name: 'playlistId',
+    type: 'string',
+    required: true,
+    description: 'Playlist id',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  async availableUserForPlaylist(
+    @Query('playlistId', new ParseUUIDPipe())
+    playlistId: string,
+  ) {
+    console.log(playlistId);
+
+    return await this.userPlaylistService.getAvailableUser(playlistId);
   }
 }

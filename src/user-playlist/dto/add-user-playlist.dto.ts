@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsUUID } from 'class-validator';
 import { IsPlaylistExist, IsUserExist } from '../../common/validator';
 
 export class AddUserPlaylistDto {
   @ApiProperty({
     name: 'userId',
-    type: 'string',
-    format: 'uuid',
+    isArray: true,
     required: true,
-    description: 'User id',
-    example: '8b3919a2-d03e-466b-ad9f-58da71f2c045',
+    description: '81daa1e8-0eaf-4c11-907e-cb62f46b615f',
+    example: ['81daa1e8-0eaf-4c11-907e-cb62f46b615f'],
   })
-  @IsUUID(4)
+  @ArrayNotEmpty()
   @IsNotEmpty()
   @IsUserExist('id', {
     message: 'invalid user id',
+    each: true,
   })
-  userId: string;
+  userId: string[];
 
   @ApiProperty({
     name: 'playlistId',
