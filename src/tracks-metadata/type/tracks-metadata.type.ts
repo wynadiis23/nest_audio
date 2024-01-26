@@ -3,5 +3,6 @@ export type tracksMetadata = {
   name: string;
   album: string;
   artist: string;
+  coverPath: string;
   duration: string;
 };

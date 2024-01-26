@@ -6,12 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksMetadata } from './entity/tracks-metadata.entity';
 import { QueryRunner, Repository } from 'typeorm';
-import { parseFile } from 'music-metadata';
+import { parseFile, selectCover } from 'music-metadata';
 import { join } from 'path';
 import { CreateMetadataDto, UpdateMetadataDto } from './dto';
 import { tracksMetadata } from './type/tracks-metadata.type';
 import { Tracks } from '../tracks/entity/tracks.entity';
 import { GetMetadataDto } from './dto/get-metadata.dto';
+import * as fs from 'fs';
 
 @Injectable()
 export class TracksMetadataService {
@@ -33,8 +34,15 @@ export class TracksMetadataService {
         name: metadata.common.title ?? payload.name,
         album: metadata.common.album,
         artist: metadata.common.artist,
+        coverPath: null,
         duration: metadata.format.duration.toString(),
       };
+      const cover = selectCover(metadata.common.picture);
+
+      if (cover) {
+        const coverPath = await this.writeCoverToFile(payload.id, cover.data);
+        info.coverPath = coverPath;
+      }
 
       return info;
     } catch (error) {
@@ -83,6 +91,39 @@ export class TracksMetadataService {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async uploadCoverImg(id: string, path: string) {
+    try {
+      // update
+      const updated = await this.tracksMetadataRepository.update(
+        { id: id },
+        { coverPath: path },
+      );
+
+      return updated;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async writeCoverToFile(imgName: string, buffer: any) {
+    try {
+      const path = '/public';
+      const extra = '/images/track-metadata';
+      const destination = `${path}${extra}`;
+      const fullPath = join(__dirname, '../..', destination);
+
+      fs.mkdirSync(fullPath, { recursive: true });
+
+      fs.writeFile(`${fullPath}/${imgName}.jpeg`, buffer, function (err) {
+        if (err) throw err;
+      });
+
+      return destination + '/' + imgName + '.jpeg';
+    } catch (error) {
       throw new InternalServerErrorException();
     }
   }
