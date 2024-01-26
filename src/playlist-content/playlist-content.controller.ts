@@ -16,13 +16,24 @@ export class PlaylistContentController {
   @ApiBody({ type: PlaylistContentDto, required: true })
   @Post()
   async create(@Body() dto: PlaylistContentDto) {
-    return await this.playlistContentService.create(dto);
+    await this.playlistContentService.create(dto);
+
+    return {
+      message: 'successfully added playlist content',
+    };
   }
 
-  @ApiOperation({ summary: 'Remove track/tracks to playlist' })
-  @ApiBody({ type: PlaylistContentDto, required: true })
-  @Post('/remove')
-  async remove(@Body() dto: PlaylistContentDto) {
-    return await this.playlistContentService.remove(dto);
-  }
+  // @ApiOperation({ summary: 'Update track/tracks to playlist' })
+  // @ApiBody({ type: UpdatePlaylistContentDto, required: true })
+  // @Put(':id')
+  // async remove(
+  //   @Param('id', ParseUUIDPipe) id: string,
+  //   @Body() dto: UpdatePlaylistContentDto,
+  // ) {
+  //   await this.playlistContentService.update(id, dto);
+
+  //   return {
+  //     message: 'successfully update playlist content',
+  //   };
+  // }
 }
