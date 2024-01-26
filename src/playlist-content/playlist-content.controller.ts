@@ -36,7 +36,7 @@ export class PlaylistContentController {
     type: 'string',
     isArray: true,
     required: true,
-    description: 'Ids of playlist content',
+    description: 'Ids of track',
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
   @Delete()
