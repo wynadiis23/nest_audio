@@ -1,4 +1,32 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Put } from '@nestjs/common';
+import { UserService } from './user.service';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../authentication/decorator';
 
+@ApiTags('User')
+@Public()
 @Controller('user')
-export class UserController {}
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'Get list all user',
+  })
+  async list() {
+    return await this.userService.list();
+  }
+
+  // update user
+  // @Put(':id')
+  // @ApiOperation({ summary: 'Update user detail' })
+  // async update() {
+  //   return {
+  //     message: 'belum jadi sabar ya',
+  //   };
+  // }
+
+  // remove user
+
+  //
+}
