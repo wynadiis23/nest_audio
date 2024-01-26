@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
   Param,
   ParseEnumPipe,
@@ -82,6 +83,23 @@ export class PlaylistController {
 
     return {
       message: 'successfully update playlist',
+    };
+  }
+
+  @ApiOperation({ summary: 'Delete playlist' })
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    required: true,
+    description: 'Id of playlist',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  @Delete()
+  async delete(@Query('id') id: string) {
+    await this.playlistService.delete(id);
+
+    return {
+      message: 'successfully deleted playlist',
     };
   }
 }

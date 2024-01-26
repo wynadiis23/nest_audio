@@ -14,11 +14,15 @@ export class UserPlaylist extends SharedEntity {
   @Column({ name: 'hash' })
   hash: string;
 
-  @ManyToOne(() => User, (user) => user.userPlaylists)
+  @ManyToOne(() => User, (user) => user.userPlaylists, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Playlist, (playlist) => playlist.userPlaylists)
+  @ManyToOne(() => Playlist, (playlist) => playlist.userPlaylists, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'playlist_id' })
   playlist: Playlist;
 }

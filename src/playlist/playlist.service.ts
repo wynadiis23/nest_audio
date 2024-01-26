@@ -137,4 +137,15 @@ export class PlaylistService {
       throw new InternalServerErrorException();
     }
   }
+
+  async delete(id: string) {
+    try {
+      return await this.playlistRepository.delete(id);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new InternalServerErrorException();
+    }
+  }
 }
