@@ -1,8 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UserRole } from '../user-role/entity/user-role.entity';
+import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
+import { Playlist } from '../playlist/entity/playlist.entity';
 
 @Injectable()
 export class UserService {
@@ -10,6 +12,28 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  async list() {
+    try {
+      const query = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoin(
+          UserPlaylist,
+          'user_playlist',
+          'user_playlist.userId = user.id',
+        )
+        .leftJoinAndMapMany(
+          'user.playlist',
+          Playlist,
+          'playlist',
+          'user_playlist.playlistId = playlist.id',
+        );
+
+      return await query.getMany();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 
   async create(username: string, password: string, roles: string[]) {
     try {
