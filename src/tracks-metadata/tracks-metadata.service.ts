@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksMetadata } from './entity/tracks-metadata.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { parseFile, selectCover } from 'music-metadata';
 import { join } from 'path';
 import { CreateMetadataDto, UpdateMetadataDto } from './dto';
@@ -45,6 +45,20 @@ export class TracksMetadataService {
       }
 
       return info;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getMultipleTrackMetadata(ids: string[]) {
+    try {
+      const trackMetadatas = await this.tracksMetadataRepository.find({
+        where: {
+          trackId: In(ids),
+        },
+      });
+
+      return trackMetadatas;
     } catch (error) {
       throw new InternalServerErrorException();
     }

@@ -1,7 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Query } from '@nestjs/common';
 import { PlaylistContentService } from './playlist-content.service';
 import { PlaylistContentDto } from './dto/playlist-content.dto';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from '../authentication/decorator';
 
 @ApiTags('Playlist Content')
@@ -23,17 +23,21 @@ export class PlaylistContentController {
     };
   }
 
-  // @ApiOperation({ summary: 'Update track/tracks to playlist' })
-  // @ApiBody({ type: UpdatePlaylistContentDto, required: true })
-  // @Put(':id')
-  // async remove(
-  //   @Param('id', ParseUUIDPipe) id: string,
-  //   @Body() dto: UpdatePlaylistContentDto,
-  // ) {
-  //   await this.playlistContentService.update(id, dto);
+  @ApiOperation({ summary: 'Remove playlist content' })
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    isArray: true,
+    required: true,
+    description: 'Ids of playlist content',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  @Delete()
+  async delete(@Query('id') ids: string[]) {
+    await this.playlistContentService.remove(ids);
 
-  //   return {
-  //     message: 'successfully update playlist content',
-  //   };
-  // }
+    return {
+      message: 'successfully remove playlist content',
+    };
+  }
 }
