@@ -60,6 +60,7 @@ export class AuthenticationService {
 
       const user = await this.userService.create(
         payload.username,
+        payload.name,
         payload.password,
         payload.roles,
       );

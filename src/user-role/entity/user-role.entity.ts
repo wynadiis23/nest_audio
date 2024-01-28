@@ -12,6 +12,7 @@ export class UserRole extends SharedEntity {
 
   @ManyToOne(() => User, (user) => user.roles, {
     orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
