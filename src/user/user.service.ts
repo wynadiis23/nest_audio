@@ -35,9 +35,14 @@ export class UserService {
     }
   }
 
-  async create(username: string, password: string, roles: string[]) {
+  async create(
+    username: string,
+    name: string,
+    password: string,
+    roles: string[],
+  ) {
     try {
-      const data = this.userRepository.create({ username, password });
+      const data = this.userRepository.create({ username, name, password });
 
       const userRole = roles.map((role) => ({
         userId: data.id,

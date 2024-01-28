@@ -27,6 +27,9 @@ export class User extends SharedEntity {
   @Column({ default: 1, comment: '1 for active and 0 for inactive' })
   isActive: number;
 
+  @Column({ length: 128, name: 'name' })
+  name: string;
+
   @OneToMany(() => Token, (token) => token.user, {
     cascade: true,
   })

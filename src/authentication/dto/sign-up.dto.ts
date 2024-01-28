@@ -44,6 +44,23 @@ export class SignUpDto {
   username: string;
 
   @ApiProperty({
+    name: 'name',
+    type: 'string',
+    maxLength: 128,
+    required: true,
+    description: 'Name of the user',
+    example: 'PS ARTO',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(4, 128)
+  @Validate(IsNotExist, ['User'], {
+    message: 'User with this name already exist.',
+  })
+  @Transform(({ value }) => value.toString().trim().toUpperCase())
+  name: string;
+
+  @ApiProperty({
     name: 'password',
     type: 'string',
     minLength: 6,
