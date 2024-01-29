@@ -1,10 +1,12 @@
 import {
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Header,
   Headers,
   Param,
+  ParseEnumPipe,
   Post,
   Query,
   Res,
@@ -29,6 +31,8 @@ import {
 import { Observable, fromEvent, map } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Public } from '../authentication/decorator';
+import { OperatorEnum } from '../common/enum';
+import { IDataTable } from '../common/interface';
 
 const path = '/public/files/tracks/';
 
@@ -45,8 +49,45 @@ export class TracksController {
   @ApiOperation({
     summary: 'List of available track',
   })
-  async list() {
-    return await this.tracksService.list();
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'Summit',
+  })
+  async list(
+    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+  ) {
+    const dataTablePayload: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+    };
+
+    return await this.tracksService.list(dataTablePayload);
   }
 
   // list available track for playlist.

@@ -20,6 +20,7 @@ import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.servic
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
+import { IDataTable } from '../common/interface';
 
 @Injectable()
 export class TracksService {
@@ -31,8 +32,8 @@ export class TracksService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async list() {
-    const query = this.tracksRepository
+  async list(dataTableOptions: IDataTable) {
+    let query = this.tracksRepository
       .createQueryBuilder('tracks')
       .leftJoinAndMapOne(
         'tracks.trackMetadata',
@@ -51,6 +52,22 @@ export class TracksService {
         'playlist',
         'playlist_content.playlistId = playlist.id',
       );
+
+    if (dataTableOptions.filterBy) {
+      dataTableOptions.filterValue = dataTableOptions.filterValue.replace(
+        /\s/g,
+        '',
+      );
+
+      query = query
+        .where(
+          `CONCAT(LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+        )
+        // .orWhere(
+        //   `CONCAT(warehouse.code, brand.code) LIKE '%' || :filterValue || '%'`,
+        // )
+        .setParameter('filterValue', dataTableOptions.filterValue);
+    }
 
     return await query.getMany();
   }
