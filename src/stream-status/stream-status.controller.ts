@@ -4,7 +4,7 @@ import { UpdateStreamStatusDto } from './dto';
 import { getCurrentDate } from '../utils';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import * as dayjs from 'dayjs';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../authentication/decorator';
 
 @ApiTags('Stream Status')
@@ -47,32 +47,6 @@ export class StreamStatusController {
     summary: 'Get user activity stream status',
   })
   async streamStatus() {
-    const date = getCurrentDate();
-    const key = `${date}*`;
-
-    // also get last activity to db
-    // compare it with status from cache, if user not found in cache, use last activity from db
-    // and set status to offline
-
-    const lastActivityDB =
-      await this.streamStatusService.getAllLastActivityFromDB();
-    const lastActivityCache = await this.redisCacheService.getStreamStatusCache(
-      key,
-    );
-
-    const activity = lastActivityDB.map((db) => {
-      const matchCached = lastActivityCache.find(
-        (cache) => db.user === cache.user,
-      );
-
-      return {
-        user: db.user,
-        status: matchCached ? matchCached.status : 'offline',
-        trackName: matchCached ? matchCached.trackName : null,
-        lastActivity: db.lastActivityTime,
-      };
-    });
-
-    return activity;
+    return await this.streamStatusService.getStreamStatus();
   }
 }
