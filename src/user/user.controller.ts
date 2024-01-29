@@ -1,7 +1,17 @@
-import { Controller, Get, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from '../authentication/decorator';
+import { UpdateUserDto } from './dto';
 
 @ApiTags('User')
 @Public()
@@ -18,15 +28,34 @@ export class UserController {
   }
 
   // update user
-  // @Put(':id')
-  // @ApiOperation({ summary: 'Update user detail' })
-  // async update() {
-  //   return {
-  //     message: 'belum jadi sabar ya',
-  //   };
-  // }
+  @Put(':id')
+  @ApiBody({ type: UpdateUserDto, required: true })
+  @ApiOperation({ summary: 'Update user detail' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    await this.userService.update(id, dto);
+    return {
+      message: 'successfully update user',
+    };
+  }
 
   // remove user
+  @Delete()
+  @ApiOperation({ summary: 'Remove user' })
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    required: true,
+    description: 'Id of track',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  async remove(@Query('id') id: string) {
+    await this.userService.remove(id);
 
-  //
+    return {
+      message: 'successfully remove user',
+    };
+  }
 }
