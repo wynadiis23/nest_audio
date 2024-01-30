@@ -21,6 +21,7 @@ import { Playlist } from '../playlist/entity/playlist.entity';
 import { PlaylistContent } from '../playlist-content/entity/playlist-content.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 import { IDataTable } from '../common/interface';
+import { trackListSortMapping } from './common';
 
 @Injectable()
 export class TracksService {
@@ -33,6 +34,7 @@ export class TracksService {
   ) {}
 
   async list(dataTableOptions: IDataTable) {
+    let sortEntity: string;
     let query = this.tracksRepository
       .createQueryBuilder('tracks')
       .leftJoinAndMapOne(
@@ -56,15 +58,32 @@ export class TracksService {
     if (dataTableOptions.filterBy) {
       query = query
         .where(
-          `CONCAT(LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+          `CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%'`,
         )
-        // .orWhere(
-        //   `CONCAT(warehouse.code, brand.code) LIKE '%' || :filterValue || '%'`,
-        // )
-        .setParameter('filterValue', dataTableOptions.filterValue);
+        .orWhere(
+          `CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+        )
+        .setParameter(
+          'filterValue',
+          dataTableOptions.filterValue.toLocaleLowerCase(),
+        );
     }
 
-    return await query.getMany();
+    if (dataTableOptions.sortBy) {
+      const sortMapped = trackListSortMapping();
+      sortEntity = sortMapped[dataTableOptions.sortBy] || sortMapped['name'];
+
+      query = query.orderBy(sortEntity, dataTableOptions.sortOrder);
+    }
+
+    const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+    const result = await query
+      .skip(skip)
+      .take(dataTableOptions.pageSize)
+      .getManyAndCount();
+
+    return result;
   }
 
   async getAvailableTrackForPlaylist(playlistId: string) {
