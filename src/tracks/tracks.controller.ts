@@ -7,6 +7,7 @@ import {
   Headers,
   Param,
   ParseEnumPipe,
+  ParseIntPipe,
   Post,
   Query,
   Res,
@@ -31,7 +32,7 @@ import {
 import { Observable, fromEvent, map } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Public } from '../authentication/decorator';
-import { OperatorEnum } from '../common/enum';
+import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 
 const path = '/public/files/tracks/';
@@ -71,6 +72,35 @@ export class TracksController {
     description: 'Filter value',
     example: 'Summit',
   })
+  @ApiQuery({
+    name: 'sortBy',
+    type: 'string',
+    required: false,
+    description: 'Sort by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    type: 'string',
+    enum: SortEnum,
+    required: false,
+    description: 'Sort order',
+    example: 'ASC',
+  })
+  @ApiQuery({
+    name: 'pageIndex',
+    type: 'number',
+    required: false,
+    description: 'Page index',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: 'number',
+    required: false,
+    description: 'Page size',
+    example: 20,
+  })
   async list(
     @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
     @Query(
@@ -80,11 +110,26 @@ export class TracksController {
     )
     filterOperator: OperatorEnum,
     @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+    @Query('sortBy', new DefaultValuePipe('name')) sortBy: string,
+    @Query(
+      'sortOrder',
+      new DefaultValuePipe(SortEnum.ASC),
+      new ParseEnumPipe(SortEnum),
+    )
+    sortOrder: SortEnum,
+    @Query('pageIndex', new DefaultValuePipe(0), ParseIntPipe)
+    pageIndex: number,
+    @Query('pageSize', new DefaultValuePipe(100), ParseIntPipe)
+    pageSize: number,
   ) {
     const dataTablePayload: IDataTable = {
       filterBy,
       filterOperator,
       filterValue,
+      sortBy,
+      sortOrder,
+      pageIndex,
+      pageSize,
     };
 
     return await this.tracksService.list(dataTablePayload);
