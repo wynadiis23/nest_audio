@@ -119,7 +119,7 @@ export class TracksController {
     sortOrder: SortEnum,
     @Query('pageIndex', new DefaultValuePipe(0), ParseIntPipe)
     pageIndex: number,
-    @Query('pageSize', new DefaultValuePipe(100), ParseIntPipe)
+    @Query('pageSize', new DefaultValuePipe(0), ParseIntPipe)
     pageSize: number,
   ) {
     const dataTablePayload: IDataTable = {

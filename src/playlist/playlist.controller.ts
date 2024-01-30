@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseEnumPipe,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -23,6 +24,8 @@ import {
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { PublishedStatusEnum } from './enum';
 import { Public } from '../authentication/decorator';
+import { OperatorEnum, SortEnum } from '../common/enum';
+import { IDataTable } from '../common/interface';
 
 @ApiTags('Playlist')
 @Public()
@@ -49,6 +52,57 @@ export class PlaylistController {
     description: 'Publish status',
     example: '1',
   })
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'Playlist name',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: 'string',
+    required: false,
+    description: 'Sort by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    type: 'string',
+    enum: SortEnum,
+    required: false,
+    description: 'Sort order',
+    example: 'ASC',
+  })
+  @ApiQuery({
+    name: 'pageIndex',
+    type: 'number',
+    required: false,
+    description: 'Page index',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: 'number',
+    required: false,
+    description: 'Page size',
+    example: 20,
+  })
   async list(
     @Query(
       'published',
@@ -56,9 +110,37 @@ export class PlaylistController {
       new ParseEnumPipe(PublishedStatusEnum),
     )
     published: PublishedStatusEnum,
+    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+    @Query('sortBy', new DefaultValuePipe('name')) sortBy: string,
+    @Query(
+      'sortOrder',
+      new DefaultValuePipe(SortEnum.ASC),
+      new ParseEnumPipe(SortEnum),
+    )
+    sortOrder: SortEnum,
+    @Query('pageIndex', new DefaultValuePipe(0), ParseIntPipe)
+    pageIndex: number,
+    @Query('pageSize', new DefaultValuePipe(0), ParseIntPipe)
+    pageSize: number,
   ) {
+    const dataTablePayload: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+      sortBy,
+      sortOrder,
+      pageIndex,
+      pageSize,
+    };
     // add role check here, if role is admin, return all playlist. if general do not include user specified playlist
-    return await this.playlistService.list(published);
+    return await this.playlistService.list(dataTablePayload, published);
   }
 
   @Get(':id')

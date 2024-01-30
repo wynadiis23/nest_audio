@@ -15,6 +15,8 @@ import { User } from '../user/entity/user.entity';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
 import { Tracks } from '../tracks/entity/tracks.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
+import { IDataTable } from '../common/interface';
+import { selectQuery } from '../common/query-builder';
 
 @Injectable()
 export class PlaylistService {
@@ -36,8 +38,9 @@ export class PlaylistService {
     }
   }
 
-  async list(publish: string) {
-    const query = this.playlistRepository
+  async list(dataTableOptions: IDataTable, publish: string) {
+    const aliasEntity = 'playlist';
+    let query = this.playlistRepository
       .createQueryBuilder('playlist')
       .leftJoin(
         PlaylistContent,
@@ -53,7 +56,28 @@ export class PlaylistService {
       )
       .where('playlist.published = :publish', { publish });
 
-    return await query.getMany();
+    if (dataTableOptions.filterBy) {
+      query = selectQuery(
+        query,
+        aliasEntity,
+        dataTableOptions.filterOperator,
+        dataTableOptions.filterBy,
+        dataTableOptions.filterValue,
+      );
+    }
+
+    const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+    const result = await query
+      .skip(skip)
+      .take(dataTableOptions.pageSize)
+      .orderBy(
+        `${aliasEntity}.${dataTableOptions.sortBy}`,
+        dataTableOptions.sortOrder,
+      )
+      .getManyAndCount();
+
+    return result;
   }
 
   async detail(id: string) {
