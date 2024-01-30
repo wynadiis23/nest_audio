@@ -22,6 +22,7 @@ import { PlaylistContent } from '../playlist-content/entity/playlist-content.ent
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 import { IDataTable } from '../common/interface';
 import { trackListSortMapping } from './common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TracksService {
@@ -31,6 +32,7 @@ export class TracksService {
     private eventEmitter: EventEmitter2,
     private readonly tracksMetadataService: TracksMetadataService,
     private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
   ) {}
 
   async list(dataTableOptions: IDataTable) {
@@ -326,7 +328,7 @@ export class TracksService {
         disposition: `inline; filename="${trackMetadata.name}"`,
         type: trackMetadata.mimetype,
       }).setErrorLogger((error) => {
-        Logger.warn(error.message, 'Streamble');
+        Logger.warn(error.message, 'Streamable');
       });
 
       const contentRange = this.getContentRange(start, end, fileSize);
@@ -373,7 +375,7 @@ export class TracksService {
   async deleteAllTrack() {
     try {
       // fix this magic string later
-      const path = '/public/files/tracks';
+      const path = this.configService.get<string>('APP_TRACK_FOLDER');
       const directory = join(__dirname, '../..', path);
 
       fs.readdir(directory, (err, files) => {

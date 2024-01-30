@@ -17,8 +17,6 @@ interface LocalFilesInterceptorOptions {
   path?: string;
   fileFilter?: MulterOptions['fileFilter'];
 }
-// fix later
-const path = '/public/files/';
 
 const trackFilter = (req, file, cb) => {
   /*
@@ -55,7 +53,7 @@ function MultipleTrackUploadFilesInterceptor(
         'APP_TRACK_UPLOAD_LIMIT',
       );
 
-      const destination = `${path}${options.path}`;
+      const destination = configService.get<string>('APP_TRACK_FOLDER');
       const fullPath = join(__dirname, '../..', destination);
 
       const multerOptions: MulterOptions = {

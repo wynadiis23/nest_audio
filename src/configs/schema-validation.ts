@@ -10,6 +10,7 @@ export const schemaValidation = Joi.object({
   APP_REFRESH_TOKEN_SECRET: Joi.string().required(),
   APP_REFRESH_TOKEN_EXP: Joi.number().required(),
   APP_COOKIE_DOMAIN: Joi.string().required(),
+  APP_TRACK_FOLDER: Joi.string().required(),
 
   // Database Configuration
   DS_HOST: Joi.string().required(),
