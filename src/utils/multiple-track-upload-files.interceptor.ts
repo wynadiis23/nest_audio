@@ -37,7 +37,8 @@ const trackFilter = (req, file, cb) => {
     return;
   }
 */
-  if (!file.mimetype.includes('audio')) {
+  if (!file.originalname.match(/\.(mp3)$/)) {
+    // if (!file.mimetype.includes('audio')) {
     return cb(new BadRequestException('Provide a valid audio'), false);
   }
   cb(null, true);
