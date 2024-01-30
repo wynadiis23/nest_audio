@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,18 +8,25 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { StreamStatusService } from './stream-status.service';
+import { WsJwtAuthGuard } from './guard/ws-jwt.guard';
+import { SocketAuthMiddleware } from './middleware/ws-auth.middleware';
+import { StreamStatusConfigService } from './stream-status-config/stream-status-config.service';
 
 @WebSocketGateway({ namespace: 'event-stream' })
+@UseGuards(WsJwtAuthGuard)
 @Injectable()
 export class StreamStatusGateway {
-  constructor(private readonly streamStatusService: StreamStatusService) {}
+  constructor(
+    private readonly streamStatusService: StreamStatusService,
+    private readonly streamStatusConfigService: StreamStatusConfigService,
+  ) {}
 
   @WebSocketServer()
   server: Server;
 
-  // afterInit(client: Socket) {
-  //   Logger.log('afterInit', client.connected);
-  // }
+  afterInit(client: Socket) {
+    client.use(SocketAuthMiddleware(this.streamStatusConfigService) as any); // because types are broken
+  }
 
   @SubscribeMessage('message')
   async handleMessage(
