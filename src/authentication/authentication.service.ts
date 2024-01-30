@@ -13,7 +13,7 @@ import { ConfigType } from '@nestjs/config';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 import { AuthorizedUserType, tokenPayload } from './types';
 import { TokenService } from '../token/token.service';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class AuthenticationService {
@@ -35,12 +35,12 @@ export class AuthenticationService {
 
       // return access token and refresh token
       const tokens = await this.generateTokens(valid.id, valid.username);
-      console.log(tokens);
       // save token
       await this.tokenService.create(tokens.refreshToken, valid.id, tokens.tf);
 
       return {
         username: valid.username,
+        roles: valid.roles,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       };
@@ -136,6 +136,9 @@ export class AuthenticationService {
       }),
     ]);
 
+    // invalidate token in database if token we expired
+    await this.tokenService.invalidateToken();
+
     return {
       accessToken,
       refreshToken,
@@ -184,20 +187,27 @@ export class AuthenticationService {
 
   async generateNewRefreshToken(authorizedUser: AuthorizedUserType) {
     try {
+      // get user data
+      const user = await this.userService.findOneById(authorizedUser.id);
       const tokens = await this.generateTokens(
-        authorizedUser.id,
-        authorizedUser.username,
+        user.id,
+        user.username,
         authorizedUser.tf,
       );
 
       // save new token
       await this.tokenService.create(
         tokens.refreshToken,
-        authorizedUser.id,
+        user.id,
         authorizedUser.tf,
       );
 
-      return tokens;
+      return {
+        username: user.username,
+        roles: user.roles,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
     } catch (error) {
       throw new InternalServerErrorException();
     }
