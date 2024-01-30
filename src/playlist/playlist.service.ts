@@ -80,9 +80,9 @@ export class PlaylistService {
     return result;
   }
 
-  async detail(id: string) {
+  async detail(id: string, dataTableOptions?: IDataTable) {
     try {
-      const query = this.playlistRepository
+      let query = this.playlistRepository
         .createQueryBuilder('playlist')
         .leftJoin(
           PlaylistContent,
@@ -109,6 +109,20 @@ export class PlaylistService {
           'user_playlist.userId = user.id',
         )
         .where('playlist.id = :id', { id });
+
+      if (dataTableOptions.filterBy) {
+        query = query
+          .where(
+            `CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%'`,
+          )
+          .orWhere(
+            `CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+          )
+          .setParameter(
+            'filterValue',
+            dataTableOptions.filterValue.toLocaleLowerCase(),
+          );
+      }
 
       return await query.getOne();
     } catch (error) {
