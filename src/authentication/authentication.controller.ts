@@ -52,7 +52,14 @@ export class AuthenticationController {
       generatedCookie.options,
     );
 
-    return signInResponse;
+    return {
+      message: 'sign in data authenticated',
+      data: {
+        username: signInResponse.username,
+        roles: signInResponse.roles.map((role) => role.code),
+        accessToken: signInResponse.accessToken,
+      },
+    };
   }
 
   @Post('sign-up')
@@ -100,8 +107,12 @@ export class AuthenticationController {
     );
 
     return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      message: 'successfully renew token',
+      data: {
+        username: tokens.username,
+        roles: tokens.roles.map((role) => role.code),
+        accessToken: tokens.accessToken,
+      },
     };
   }
 
