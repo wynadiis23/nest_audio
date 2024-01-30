@@ -19,6 +19,7 @@ jobs:
           echo APP_REFRESH_TOKEN_SECRET=${{ secrets.APP_REFRESH_TOKEN_SECRET }} >> .env
           echo APP_REFRESH_TOKEN_EXP=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
           echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
+          echo APP_TRACK_FOLDER=${{ secrets.APP_TRACK_FOLDER }} >> .env
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
           echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
@@ -35,3 +36,6 @@ jobs:
         run: |
           docker compose down --remove-orphans
           docker compose up -d
+      - name: clean up docker image
+        run: |
+          docker image prune

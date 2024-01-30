@@ -34,8 +34,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Public } from '../authentication/decorator';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
-
-const path = '/public/files/tracks/';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Tracks')
 @Public()
@@ -44,6 +43,7 @@ export class TracksController {
   constructor(
     private readonly tracksService: TracksService,
     private eventEmitter: EventEmitter2,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get()
@@ -190,9 +190,10 @@ export class TracksController {
     }),
   )
   async addTracks(@UploadedFiles() files: Array<Express.Multer.File>) {
+    const trackFolder = this.configService.get<string>('APP_TRACK_FOLDER');
     const tracks: TracksDto[] = files.map((file) => ({
       name: file.originalname.split('.').slice(0, -1).join('.'),
-      path: path + file.filename,
+      path: trackFolder + '/' + file.filename,
       mimetype: file.mimetype,
     }));
 
