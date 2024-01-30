@@ -191,7 +191,7 @@ export class TracksController {
   )
   async addTracks(@UploadedFiles() files: Array<Express.Multer.File>) {
     const tracks: TracksDto[] = files.map((file) => ({
-      name: file.originalname,
+      name: file.originalname.split('.').slice(0, -1).join('.'),
       path: path + file.filename,
       mimetype: file.mimetype,
     }));

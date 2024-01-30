@@ -287,9 +287,7 @@ export class TracksService {
   }
 
   parseRange(range: string, fileSize: number) {
-    console.log(range, fileSize);
     const parseResult = rangeParser(fileSize, range);
-    console.log(parseResult);
     if (parseResult === -1 || parseResult === -2 || parseResult.length !== 1) {
       throw new BadRequestException();
     }
@@ -327,6 +325,8 @@ export class TracksService {
       const streamableFile = new StreamableFile(stream, {
         disposition: `inline; filename="${trackMetadata.name}"`,
         type: trackMetadata.mimetype,
+      }).setErrorLogger((error) => {
+        Logger.warn(error.message, 'Streamble');
       });
 
       const contentRange = this.getContentRange(start, end, fileSize);
@@ -336,7 +336,6 @@ export class TracksService {
         contentRange,
       };
     } catch (error) {
-      console.log(error);
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
