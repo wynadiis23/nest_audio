@@ -54,11 +54,6 @@ export class TracksService {
       );
 
     if (dataTableOptions.filterBy) {
-      dataTableOptions.filterValue = dataTableOptions.filterValue.replace(
-        /\s/g,
-        '',
-      );
-
       query = query
         .where(
           `CONCAT(LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
