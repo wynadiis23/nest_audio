@@ -145,13 +145,50 @@ export class PlaylistController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get detail of playlist based on playlist id' })
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'Summit',
+  })
   @ApiParam({
     name: 'id',
     required: true,
     type: 'string',
   })
-  async detail(@Param('id') id: string) {
-    return await this.playlistService.detail(id);
+  async detail(
+    @Param('id') id: string,
+    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+  ) {
+    const dataTablePayload: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+    };
+    return await this.playlistService.detail(id, dataTablePayload);
   }
 
   @ApiOperation({ summary: 'Update playlist' })
