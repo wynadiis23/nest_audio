@@ -40,7 +40,7 @@ const storage = diskStorage({
 
 const imageFileFilter = (req, file, cb) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-    return cb(new BadRequestException('Provide a valid audio'), false);
+    return cb(new BadRequestException('Provide a valid image'), false);
   }
   cb(null, true);
 };
