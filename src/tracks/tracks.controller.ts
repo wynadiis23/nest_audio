@@ -148,8 +148,7 @@ export class TracksController {
 
   @Delete()
   @ApiOperation({
-    summary:
-      'Delete tracks. It will also delete track from playlist content. (DO NOT USE IT)',
+    summary: 'Delete tracks. Cannot delete track that in a playlist',
   })
   @ApiQuery({
     name: 'id',
@@ -159,7 +158,11 @@ export class TracksController {
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
   async delete(@Query('id') id: string) {
-    return await this.tracksService.delete(id);
+    await this.tracksService.delete(id);
+
+    return {
+      message: 'successfully deleted track',
+    };
   }
 
   @Post()
@@ -209,6 +212,12 @@ export class TracksController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get detailed information of track' })
+  async detail(@Param('id') id: string) {
+    return await this.tracksService.findByTrackId(id);
+  }
+
+  @Get('/stream/:id')
   @ApiOperation({ summary: 'Stream track based on track id' })
   @ApiHeader({
     name: 'range',

@@ -225,6 +225,17 @@ export class TracksService {
           'tracks_metadata',
           'tracks_metadata.trackId = tracks.id',
         )
+        .leftJoin(
+          PlaylistContent,
+          'playlist_content',
+          'playlist_content.trackId = tracks.id',
+        )
+        .leftJoinAndMapMany(
+          'tracks.playlist',
+          Playlist,
+          'playlist',
+          'playlist_content.playlistId = playlist.id',
+        )
         .where('tracks.id = :id', { id })
         .getOne();
     } catch (error) {
@@ -238,6 +249,16 @@ export class TracksService {
 
       if (!track) {
         throw new BadRequestException('invalid track id');
+      }
+
+      if (track['playlist'].length > 0) {
+        for (const playlist of track['playlist'] as Playlist[]) {
+          if (playlist.published) {
+            throw new BadRequestException(
+              'cannot deleted track that in PUBLISHED playlist',
+            );
+          }
+        }
       }
 
       fs.unlink(join(__dirname, '../..', track.path), (error) => {
