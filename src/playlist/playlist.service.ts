@@ -111,12 +111,10 @@ export class PlaylistService {
         .where('playlist.id = :id', { id });
 
       if (dataTableOptions.filterBy) {
+        console.log('masuk');
         query = query
-          .where(
-            `CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%'`,
-          )
-          .orWhere(
-            `CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+          .andWhere(
+            `(CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%' OR CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%')`,
           )
           .setParameter(
             'filterValue',
