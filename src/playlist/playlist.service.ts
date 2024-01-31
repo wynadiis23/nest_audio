@@ -17,6 +17,8 @@ import { Tracks } from '../tracks/entity/tracks.entity';
 import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity';
 import { IDataTable } from '../common/interface';
 import { selectQuery } from '../common/query-builder';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { UpdatePlaylistEvent } from './events';
 
 @Injectable()
 export class PlaylistService {
@@ -24,6 +26,7 @@ export class PlaylistService {
     @InjectRepository(Playlist)
     private readonly playlistRepository: Repository<Playlist>,
     private readonly tracksMetadataService: TracksMetadataService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(payload: PlaylistDto) {
@@ -110,7 +113,7 @@ export class PlaylistService {
         )
         .where('playlist.id = :id', { id });
 
-      if (dataTableOptions.filterBy) {
+      if (dataTableOptions?.filterBy) {
         query = query
           .andWhere(
             `(CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%' OR CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%')`,
@@ -166,7 +169,20 @@ export class PlaylistService {
         });
       }
 
-      return await this.playlistRepository.save(data);
+      const updateResult = await this.playlistRepository.save(data);
+
+      const playlistEventAction =
+        updateResult.published == 0
+          ? 'unpublish playlist'
+          : 'add or remove track';
+
+      const updatePlaylistEvent = new UpdatePlaylistEvent();
+      updatePlaylistEvent.id = id;
+      updatePlaylistEvent.action = playlistEventAction;
+
+      this.eventEmitter.emit('scaffold-updated-playlist', updatePlaylistEvent);
+
+      return updateResult;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
@@ -183,6 +199,21 @@ export class PlaylistService {
         throw new BadRequestException(error.message);
       }
       throw new InternalServerErrorException();
+    }
+  }
+
+  @OnEvent('scaffold-updated-playlist')
+  async scaffoldingUpdatePlaylist(payload: UpdatePlaylistEvent) {
+    try {
+      const playlist = await this.detail(payload.id);
+
+      this.eventEmitter.emit('update-playlist', {
+        ...payload,
+        users: playlist['users'].map((user: User) => user.username),
+      });
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(error);
     }
   }
 }

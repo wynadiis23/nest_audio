@@ -14,8 +14,10 @@ export class WsJwtAuthGuard implements CanActivate {
     const authorization =
       client.handshake.auth?.token || client.handshake.headers?.token;
 
-    const payload =
-      this.streamStatusConfigService.isValidAuthHeader(authorization);
+    const payload = this.streamStatusConfigService.isValidAuthHeader(
+      authorization,
+      client,
+    );
 
     return payload;
   }
