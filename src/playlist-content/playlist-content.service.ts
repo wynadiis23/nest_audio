@@ -18,6 +18,16 @@ export class PlaylistContentService {
 
   async create(payload: PlaylistContentDto) {
     try {
+      payload.trackIds = await this.validateTrackExistInPlaylist(
+        payload.trackIds,
+        payload.playlistId,
+      );
+      console.log(payload.trackIds);
+
+      if (!payload.trackIds.length) {
+        return;
+      }
+
       const trackMetadatas =
         await this.tracksMetadataService.getMultipleTrackMetadata(
           payload.trackIds,
@@ -68,7 +78,30 @@ export class PlaylistContentService {
       updatePlaylistEvent.action = playlistEventAction;
 
       this.eventEmitter.emit('scaffold-updated-playlist', updatePlaylistEvent);
+
       return await deleteQuery.execute();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async validateTrackExistInPlaylist(trackIds: string[], playlistId: string) {
+    try {
+      const trackIdsPlaylist = await this.playlistContentRepository.find({
+        select: ['trackId'],
+        where: {
+          playlistId: playlistId,
+        },
+      });
+
+      const validTrackIds = trackIds.filter(
+        (id) =>
+          !trackIdsPlaylist
+            .map((playlistContent) => playlistContent.trackId)
+            .includes(id),
+      );
+
+      return validTrackIds;
     } catch (error) {
       throw new InternalServerErrorException();
     }
