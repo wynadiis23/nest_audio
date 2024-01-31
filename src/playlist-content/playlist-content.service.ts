@@ -4,6 +4,8 @@ import { PlaylistContent } from './entity/playlist-content.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { PlaylistContentDto } from './dto/playlist-content.dto';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UpdatePlaylistEvent } from '../playlist/events';
 
 @Injectable()
 export class PlaylistContentService {
@@ -11,6 +13,7 @@ export class PlaylistContentService {
     @InjectRepository(PlaylistContent)
     private readonly playlistContentRepository: Repository<PlaylistContent>,
     private readonly tracksMetadataService: TracksMetadataService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(payload: PlaylistContentDto) {
@@ -29,9 +32,15 @@ export class PlaylistContentService {
       );
 
       const datas = this.playlistContentRepository.create(tracks);
-      console.log(datas);
 
       await this.playlistContentRepository.save(datas);
+
+      const playlistEventAction = 'add or remove';
+      const updatePlaylistEvent = new UpdatePlaylistEvent();
+      updatePlaylistEvent.id = payload.playlistId;
+      updatePlaylistEvent.action = playlistEventAction;
+
+      this.eventEmitter.emit('scaffold-updated-playlist', updatePlaylistEvent);
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -53,6 +62,12 @@ export class PlaylistContentService {
         .where('playlist_content.playlist_id = :playlistId', { playlistId })
         .andWhere('playlist_content.track_id IN (:...trackIds)', { trackIds });
 
+      const playlistEventAction = 'add or remove';
+      const updatePlaylistEvent = new UpdatePlaylistEvent();
+      updatePlaylistEvent.id = playlistId;
+      updatePlaylistEvent.action = playlistEventAction;
+
+      this.eventEmitter.emit('scaffold-updated-playlist', updatePlaylistEvent);
       return await deleteQuery.execute();
     } catch (error) {
       throw new InternalServerErrorException();

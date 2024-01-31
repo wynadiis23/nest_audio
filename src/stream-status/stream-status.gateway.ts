@@ -22,6 +22,8 @@ import { AllExceptionsSocketFilter } from '../common/exception';
 import { WSAuthMiddleware } from './middleware';
 import { WSAuthType } from './type';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
+import { OnEvent } from '@nestjs/event-emitter';
+import { UpdatePlaylistEvent } from '../playlist/events';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -93,6 +95,31 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
       await this.redisCacheService.unset(`ws_user_${client.id}`);
     } catch (error) {
       throw new InternalServerErrorException();
+    }
+  }
+
+  @OnEvent('update-playlist')
+  async sendUpdatePlaylist(payload: UpdatePlaylistEvent) {
+    if (payload.users.length) {
+      // send to specific user
+      // fetch all client id for username
+      const connections: { id: string; username: string }[] =
+        await this.redisCacheService.getWebSocketConnections('ws_user');
+
+      const clients = connections.filter((connection) =>
+        payload.users.includes(connection.username),
+      );
+      const clientIds = clients.map((client) => client.id);
+
+      this.server.to(clientIds).emit('update-playlist', {
+        playlistId: payload.id,
+        status: payload.action,
+      });
+    } else {
+      this.server.emit('update-playlist', {
+        playlistId: payload.id,
+        status: payload.action,
+      });
     }
   }
 }

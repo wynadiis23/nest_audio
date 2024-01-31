@@ -44,4 +44,21 @@ export class RedisCacheService {
       throw new InternalServerErrorException();
     }
   }
+
+  // get stored web socket connection
+  async getWebSocketConnections(key: string) {
+    try {
+      const connections = [];
+      const keys: string[] = await this.cache.store.keys(`${key}*`);
+
+      for (const key of keys) {
+        const connection = await this.cache.get(key);
+        connections.push(connection);
+      }
+
+      return connections;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }
