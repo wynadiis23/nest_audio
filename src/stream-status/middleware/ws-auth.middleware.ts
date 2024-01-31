@@ -13,7 +13,9 @@ export const SocketAuthMiddleware = (
       const authorization =
         client.handshake.auth.token || client.handshake.headers.token;
 
-      streamStatusConfigService.isValidAuthHeader(authorization);
+      const payload =
+        streamStatusConfigService.isValidAuthHeader(authorization);
+      client.handshake.auth.payload = payload;
       next();
     } catch (error) {
       next(error);

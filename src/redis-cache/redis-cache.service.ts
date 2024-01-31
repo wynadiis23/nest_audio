@@ -13,9 +13,17 @@ export class RedisCacheService {
     private readonly cache: Cache,
   ) {}
 
-  async set(key: string, value: any) {
+  async set(key: string, value: any, ttl?: number) {
     try {
-      return await this.cache.set(key, value);
+      return await this.cache.set(key, value, { ttl: ttl } as any);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async unset(key: string) {
+    try {
+      return await this.cache.del(key);
     } catch (error) {
       throw new InternalServerErrorException();
     }
