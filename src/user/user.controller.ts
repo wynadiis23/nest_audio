@@ -27,7 +27,6 @@ import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 import { RoleEnum } from '../user-role/enum';
 import { RolesGuard } from '../authentication/guard';
-import { Request } from 'express';
 
 @ApiTags('User')
 @Controller('user')
