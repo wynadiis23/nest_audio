@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { StreamStatusConfigService } from '../stream-status-config/stream-status-config.service';
+import { EventGatewayConfigService } from '../event-gateway-config/event-gateway-config.service';
 
 @Injectable()
 export class WsJwtAuthGuard implements CanActivate {
-  constructor(private streamStatusConfigService: StreamStatusConfigService) {}
+  constructor(private eventGatewayConfigService: EventGatewayConfigService) {}
   canActivate(context: ExecutionContext): any {
     if (context.getType() !== 'ws') {
       return true;
@@ -14,7 +14,7 @@ export class WsJwtAuthGuard implements CanActivate {
     const authorization =
       client.handshake.auth?.token || client.handshake.headers?.token;
 
-    const payload = this.streamStatusConfigService.isValidAuthHeader(
+    const payload = this.eventGatewayConfigService.isValidAuthHeader(
       authorization,
       client,
     );

@@ -4,16 +4,11 @@ import { StreamStatusController } from './stream-status.controller';
 import { RedisCacheModule } from '../redis-cache/redis-cache.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LastActivity } from '../last-activity/entity/last-activity.entity';
-import { StreamStatusGateway } from './stream-status.gateway';
-import { StreamStatusConfigModule } from './stream-status-config/stream-status-config.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([LastActivity]),
-    RedisCacheModule,
-    StreamStatusConfigModule,
-  ],
-  providers: [StreamStatusService, StreamStatusGateway],
+  imports: [TypeOrmModule.forFeature([LastActivity]), RedisCacheModule],
+  providers: [StreamStatusService],
   controllers: [StreamStatusController],
+  exports: [StreamStatusService],
 })
 export class StreamStatusModule {}

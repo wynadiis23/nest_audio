@@ -7,6 +7,9 @@ import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { getCurrentDate } from '../utils';
 import { streamStatusType } from './type';
 import * as dayjs from 'dayjs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UPDATE_STREAM_STATUS_EVENT_CONST } from '../event-gateway/const';
+import { UpdateStreamStatusDtoEvent } from './events/dto';
 
 @Injectable()
 export class StreamStatusService {
@@ -14,6 +17,7 @@ export class StreamStatusService {
     @InjectRepository(LastActivity)
     private readonly lastActivityRepository: Repository<LastActivity>,
     private readonly redisCacheService: RedisCacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async updateLastActivityDB(payload: UpdateLastActivityDBDto) {
@@ -48,7 +52,7 @@ export class StreamStatusService {
       const lastActivityCache =
         await this.redisCacheService.getStreamStatusCache(key);
 
-      const activity = lastActivityDB.map((db) => {
+      const activity = lastActivityDB.map((db): UpdateStreamStatusDtoEvent => {
         const matchCached = lastActivityCache.find(
           (cache) => db.user === cache.user,
         );
@@ -57,9 +61,12 @@ export class StreamStatusService {
           user: db.user,
           status: matchCached ? matchCached.status : 'offline',
           trackName: matchCached ? matchCached.trackName : null,
-          lastActivity: db.lastActivityTime,
+          lastActivity: dayjs(db.lastActivityTime).format(),
         };
       });
+
+      // send event to trigger websocket
+      this.eventEmitter.emit(UPDATE_STREAM_STATUS_EVENT_CONST, activity);
 
       return activity;
     } catch (error) {

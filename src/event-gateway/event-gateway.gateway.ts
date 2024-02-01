@@ -1,4 +1,14 @@
 import {
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { StreamStatusService } from '../stream-status/stream-status.service';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
+import {
   Injectable,
   InternalServerErrorException,
   UseFilters,
@@ -6,24 +16,19 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import {
-  ConnectedSocket,
-  MessageBody,
-  OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { StreamStatusService } from './stream-status.service';
-import { WsJwtAuthGuard } from './guard/ws-jwt.guard';
-import { StreamStatusConfigService } from './stream-status-config/stream-status-config.service';
+import { OnEvent } from '@nestjs/event-emitter';
 import { AllExceptionsSocketFilter } from '../common/exception';
+import { WsJwtAuthGuard } from './guard/ws-jwt.guard';
 import { WSAuthMiddleware } from './middleware';
 import { WSAuthType } from './type';
-import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import { OnEvent } from '@nestjs/event-emitter';
 import { UpdatePlaylistEvent } from '../playlist/events';
+import { EventGatewayConfigService } from './event-gateway-config/event-gateway-config.service';
+import {
+  SUBS_UPDATE_STREAM_STATUS,
+  UPDATE_PLAYLIST_EVENT_CONST,
+  UPDATE_STREAM_STATUS_EVENT_CONST,
+} from './const';
+import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -35,10 +40,10 @@ import { UpdatePlaylistEvent } from '../playlist/events';
 })
 @UseGuards(WsJwtAuthGuard)
 @Injectable()
-export class StreamStatusGateway implements OnGatewayDisconnect {
+export class EventGatewayGateway {
   constructor(
     private readonly streamStatusService: StreamStatusService,
-    private readonly streamStatusConfigService: StreamStatusConfigService,
+    private readonly eventGatewayConfigService: EventGatewayConfigService,
     private readonly redisCacheService: RedisCacheService,
   ) {}
 
@@ -51,28 +56,22 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
   // }
 
   afterInit(server: Server) {
-    const middleware = WSAuthMiddleware(this.streamStatusConfigService);
+    const middleware = WSAuthMiddleware(this.eventGatewayConfigService);
     server.use(middleware);
   }
 
-  @SubscribeMessage('message')
-  async handleMessage(
+  // subscribe incoming message from web socket client
+  @SubscribeMessage(SUBS_UPDATE_STREAM_STATUS)
+  async handleMessageStreamStatus(
     @ConnectedSocket() client: Socket,
     @MessageBody()
     message: { id: string; name: string; status: string; trackName: string },
   ): Promise<void> {
     await this.streamStatusService.updateStreamStatus(message);
-    // send event to listener
-    await this.sendStreamStatusUpdate();
+    await this.streamStatusService.getStreamStatus();
 
     // return back response to sender
     client.emit('message', 'successfully transmitted');
-  }
-
-  async sendStreamStatusUpdate() {
-    // send status update to listener
-    const streamStatus = await this.streamStatusService.getStreamStatus();
-    this.server.emit('stream-status-update', streamStatus);
   }
 
   async handleConnection(client: Socket) {
@@ -98,7 +97,13 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
     }
   }
 
-  @OnEvent('update-playlist')
+  @OnEvent(UPDATE_STREAM_STATUS_EVENT_CONST)
+  async sendStreamStatusUpdate(payload: UpdateStreamStatusDtoEvent) {
+    // send status update to listener
+    this.server.emit(UPDATE_STREAM_STATUS_EVENT_CONST, payload);
+  }
+
+  @OnEvent(UPDATE_PLAYLIST_EVENT_CONST)
   async sendUpdatePlaylist(payload: UpdatePlaylistEvent) {
     if (payload.users.length) {
       // send to specific user
@@ -111,12 +116,12 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
       );
       const clientIds = clients.map((client) => client.id);
 
-      this.server.to(clientIds).emit('update-playlist', {
+      this.server.to(clientIds).emit(UPDATE_PLAYLIST_EVENT_CONST, {
         playlistId: payload.id,
         status: payload.action,
       });
     } else {
-      this.server.emit('update-playlist', {
+      this.server.emit(UPDATE_PLAYLIST_EVENT_CONST, {
         playlistId: payload.id,
         status: payload.action,
       });

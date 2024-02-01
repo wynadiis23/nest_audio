@@ -1,18 +1,18 @@
 import { Socket } from 'socket.io';
-import { StreamStatusConfigService } from '../stream-status-config/stream-status-config.service';
+import { EventGatewayConfigService } from '../event-gateway-config/event-gateway-config.service';
 
 export type SocketMiddleware = (
   socket: Socket,
   next: (err?: Error) => void,
 ) => void;
 export const WSAuthMiddleware = (
-  streamStatusConfigService: StreamStatusConfigService,
+  eventGatewayConfigService: EventGatewayConfigService,
 ): SocketMiddleware => {
   return async (client: Socket, next) => {
     try {
       const token =
         client.handshake.auth.token || client.handshake.headers.token;
-      const payload = await streamStatusConfigService.isValidAuthHeader(token);
+      const payload = await eventGatewayConfigService.isValidAuthHeader(token);
       if (payload) {
         client.handshake.auth.payload = payload;
         next();
