@@ -5,7 +5,7 @@ import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
 @Injectable()
-export class StreamStatusConfigService {
+export class EventGatewayConfigService {
   constructor(
     private configService: ConfigService,
     private readonly jwtService: JwtService,

@@ -1,4 +1,14 @@
 import {
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { StreamStatusService } from '../stream-status/stream-status.service';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
+import {
   Injectable,
   InternalServerErrorException,
   UseFilters,
@@ -6,24 +16,13 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import {
-  ConnectedSocket,
-  MessageBody,
-  OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { StreamStatusService } from './stream-status.service';
-import { WsJwtAuthGuard } from './guard/ws-jwt.guard';
-import { StreamStatusConfigService } from './stream-status-config/stream-status-config.service';
+import { OnEvent } from '@nestjs/event-emitter';
 import { AllExceptionsSocketFilter } from '../common/exception';
+import { WsJwtAuthGuard } from './guard/ws-jwt.guard';
 import { WSAuthMiddleware } from './middleware';
 import { WSAuthType } from './type';
-import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import { OnEvent } from '@nestjs/event-emitter';
 import { UpdatePlaylistEvent } from '../playlist/events';
+import { EventGatewayConfigService } from './event-gateway-config/event-gateway-config.service';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -35,10 +34,10 @@ import { UpdatePlaylistEvent } from '../playlist/events';
 })
 @UseGuards(WsJwtAuthGuard)
 @Injectable()
-export class StreamStatusGateway implements OnGatewayDisconnect {
+export class EventGatewayGateway {
   constructor(
     private readonly streamStatusService: StreamStatusService,
-    private readonly streamStatusConfigService: StreamStatusConfigService,
+    private readonly eventGatewayConfigService: EventGatewayConfigService,
     private readonly redisCacheService: RedisCacheService,
   ) {}
 
@@ -51,7 +50,7 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
   // }
 
   afterInit(server: Server) {
-    const middleware = WSAuthMiddleware(this.streamStatusConfigService);
+    const middleware = WSAuthMiddleware(this.eventGatewayConfigService);
     server.use(middleware);
   }
 
@@ -67,12 +66,6 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
 
     // return back response to sender
     client.emit('message', 'successfully transmitted');
-  }
-
-  async sendStreamStatusUpdate() {
-    // send status update to listener
-    const streamStatus = await this.streamStatusService.getStreamStatus();
-    this.server.emit('stream-status-update', streamStatus);
   }
 
   async handleConnection(client: Socket) {
@@ -96,6 +89,12 @@ export class StreamStatusGateway implements OnGatewayDisconnect {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  async sendStreamStatusUpdate() {
+    // send status update to listener
+    const streamStatus = await this.streamStatusService.getStreamStatus();
+    this.server.emit('stream-status-update', streamStatus);
   }
 
   @OnEvent('update-playlist')

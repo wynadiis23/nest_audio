@@ -33,6 +33,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenAuthGuard } from './authentication/guard';
 import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
 import { UserPlaylistModule } from './user-playlist/user-playlist.module';
+import { EventGatewayModule } from './event-gateway/event-gateway.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { UserPlaylistModule } from './user-playlist/user-playlist.module';
     TokenModule,
     TracksMetadataModule,
     UserPlaylistModule,
+    EventGatewayModule,
   ],
   controllers: [AppController],
   providers: [
