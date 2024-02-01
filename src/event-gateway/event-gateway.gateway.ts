@@ -23,6 +23,12 @@ import { WSAuthMiddleware } from './middleware';
 import { WSAuthType } from './type';
 import { UpdatePlaylistEvent } from '../playlist/events';
 import { EventGatewayConfigService } from './event-gateway-config/event-gateway-config.service';
+import {
+  SUBS_UPDATE_STREAM_STATUS,
+  UPDATE_PLAYLIST_EVENT_CONST,
+  UPDATE_STREAM_STATUS_EVENT_CONST,
+} from './const';
+import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -54,15 +60,15 @@ export class EventGatewayGateway {
     server.use(middleware);
   }
 
-  @SubscribeMessage('message')
-  async handleMessage(
+  // subscribe incoming message from web socket client
+  @SubscribeMessage(SUBS_UPDATE_STREAM_STATUS)
+  async handleMessageStreamStatus(
     @ConnectedSocket() client: Socket,
     @MessageBody()
     message: { id: string; name: string; status: string; trackName: string },
   ): Promise<void> {
     await this.streamStatusService.updateStreamStatus(message);
-    // send event to listener
-    await this.sendStreamStatusUpdate();
+    await this.streamStatusService.getStreamStatus();
 
     // return back response to sender
     client.emit('message', 'successfully transmitted');
@@ -91,13 +97,13 @@ export class EventGatewayGateway {
     }
   }
 
-  async sendStreamStatusUpdate() {
+  @OnEvent(UPDATE_STREAM_STATUS_EVENT_CONST)
+  async sendStreamStatusUpdate(payload: UpdateStreamStatusDtoEvent) {
     // send status update to listener
-    const streamStatus = await this.streamStatusService.getStreamStatus();
-    this.server.emit('stream-status-update', streamStatus);
+    this.server.emit(UPDATE_STREAM_STATUS_EVENT_CONST, payload);
   }
 
-  @OnEvent('update-playlist')
+  @OnEvent(UPDATE_PLAYLIST_EVENT_CONST)
   async sendUpdatePlaylist(payload: UpdatePlaylistEvent) {
     if (payload.users.length) {
       // send to specific user
@@ -110,12 +116,12 @@ export class EventGatewayGateway {
       );
       const clientIds = clients.map((client) => client.id);
 
-      this.server.to(clientIds).emit('update-playlist', {
+      this.server.to(clientIds).emit(UPDATE_PLAYLIST_EVENT_CONST, {
         playlistId: payload.id,
         status: payload.action,
       });
     } else {
-      this.server.emit('update-playlist', {
+      this.server.emit(UPDATE_PLAYLIST_EVENT_CONST, {
         playlistId: payload.id,
         status: payload.action,
       });
