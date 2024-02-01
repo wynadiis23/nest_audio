@@ -10,6 +10,8 @@ import { UserRole } from '../user-role/entity/user-role.entity';
 import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { UpdateUserDto } from './dto';
+import { IDataTable } from '../common/interface';
+import { selectQuery } from '../common/query-builder';
 
 @Injectable()
 export class UserService {
@@ -18,9 +20,10 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async list() {
+  async list(dataTableOptions: IDataTable) {
     try {
-      const query = this.userRepository
+      const entity = 'user';
+      let query = this.userRepository
         .createQueryBuilder('user')
         .leftJoin(
           UserPlaylist,
@@ -34,7 +37,30 @@ export class UserService {
           'user_playlist.playlistId = playlist.id',
         );
 
-      return await query.getMany();
+      if (dataTableOptions.filterBy) {
+        if (dataTableOptions.filterBy == 'name') {
+          dataTableOptions.filterValue =
+            dataTableOptions.filterValue.toUpperCase();
+        }
+        query = selectQuery(
+          query,
+          entity,
+          dataTableOptions.filterOperator,
+          dataTableOptions.filterBy,
+          dataTableOptions.filterValue,
+        );
+      }
+
+      const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+      return await query
+        .skip(skip)
+        .take(dataTableOptions.pageSize)
+        .orderBy(
+          `${entity}.${dataTableOptions.sortBy}`,
+          dataTableOptions.sortOrder,
+        )
+        .getManyAndCount();
     } catch (error) {
       throw new InternalServerErrorException();
     }
