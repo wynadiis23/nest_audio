@@ -32,7 +32,7 @@ export class PlaylistContentController {
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
   @ApiQuery({
-    name: 'trackIds[]',
+    name: 'trackIds',
     type: 'string',
     isArray: true,
     required: true,
@@ -44,6 +44,10 @@ export class PlaylistContentController {
     @Query('playlistId') playlistId: string,
     @Query('trackIds') trackIds: string[],
   ) {
+    if (!Array.isArray(trackIds)) {
+      trackIds = [trackIds];
+    }
+
     await this.playlistContentService.remove2(trackIds, playlistId);
 
     return {
