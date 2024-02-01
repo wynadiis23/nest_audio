@@ -10,21 +10,32 @@ import {
   ParseUUIDPipe,
   Put,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from '../authentication/decorator';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Public, Roles } from '../authentication/decorator';
 import { UpdateUserDto } from './dto';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
+import { RoleEnum } from '../user-role/enum';
+import { RolesGuard } from '../authentication/guard';
+import { Request } from 'express';
 
 @ApiTags('User')
-@Public()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @Public()
   @ApiOperation({
     summary: 'Get list all user',
   })
@@ -115,7 +126,15 @@ export class UserController {
 
   // update user
   @Put(':id')
+  @Public()
   @ApiBody({ type: UpdateUserDto, required: true })
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    required: true,
+    description: 'Id of user',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
   @ApiOperation({ summary: 'Update user detail' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -129,16 +148,19 @@ export class UserController {
 
   // remove user
   @Delete()
+  @ApiBearerAuth()
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Remove user' })
   @ApiQuery({
     name: 'id',
     type: 'string',
     required: true,
-    description: 'Id of track',
+    description: 'Id of user',
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
-  async remove(@Query('id') id: string) {
-    await this.userService.remove(id);
+  async remove(@Query('id') id: string, @Req() req: any) {
+    await this.userService.remove(req.user.sub, id);
 
     return {
       message: 'successfully remove user',

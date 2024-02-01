@@ -31,6 +31,12 @@ export class UserService {
           'user_playlist.userId = user.id',
         )
         .leftJoinAndMapMany(
+          'user.roles',
+          UserRole,
+          'user_role',
+          'user_role.userId = user.id',
+        )
+        .leftJoinAndMapMany(
           'user.playlist',
           Playlist,
           'playlist',
@@ -153,10 +159,16 @@ export class UserService {
     }
   }
 
-  async remove(id: string) {
+  async remove(currentId: string, id: string) {
     try {
+      if (currentId === id) {
+        throw new BadRequestException('cannot delete this user');
+      }
       await this.userRepository.delete(id);
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
