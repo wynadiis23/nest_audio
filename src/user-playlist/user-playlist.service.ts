@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPlaylist } from './entity/user-playlist.entity';
-import { In, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AddUserPlaylistDto } from './dto';
 import * as crypto from 'crypto';
 import { Playlist } from '../playlist/entity/playlist.entity';
@@ -71,7 +71,7 @@ export class UserPlaylistService {
           'user_playlist',
           'user_playlist.playlistId = playlist.id',
         )
-        .where('playlist.publish = 1')
+        .where('playlist.published = 1')
         .andWhere('user_playlist.userId = :userId', { userId });
 
       return await query.getMany();
