@@ -213,13 +213,24 @@ export class AuthenticationService {
     }
   }
 
-  generateRefreshTokenCookie(rt: string) {
+  generateRefreshTokenCookie(rt: string): {
+    key: string;
+    refreshToken: string;
+    options: {
+      httpOnly: boolean;
+      secure: boolean;
+      sameSite: 'none' | 'lax' | 'strict';
+      expires: Date;
+      domain: string;
+    };
+  } {
     return {
       key: KEY_REFRESH_TOKEN_COOKIE,
       refreshToken: rt,
       options: {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
         expires: new Date(
           Date.now() + +this.appConfig.refreshTokenExpiration * 60 * 1000,
         ),
