@@ -1,7 +1,5 @@
+import { updateStreamStatusMessageType } from '../../event-gateway/type';
+
 export type streamStatusType = {
-  id: string;
-  user: string;
-  status: string;
-  trackName: string;
   lastActivity: string;
-};
+} & updateStreamStatusMessageType;

@@ -9,7 +9,8 @@ import { streamStatusType } from './type';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UPDATE_STREAM_STATUS_EVENT_CONST } from '../event-gateway/const';
-import { UpdateStreamStatusDtoEvent } from './events/dto';
+import { updateStreamStatusMessageType } from '../event-gateway/type';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class StreamStatusService {
@@ -17,6 +18,7 @@ export class StreamStatusService {
     @InjectRepository(LastActivity)
     private readonly lastActivityRepository: Repository<LastActivity>,
     private readonly redisCacheService: RedisCacheService,
+    private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -49,19 +51,23 @@ export class StreamStatusService {
       // and set status to offline
 
       const lastActivityDB = await this.getAllLastActivityFromDB();
-      const lastActivityCache =
+      const lastActivityCache: streamStatusType[] =
         await this.redisCacheService.getStreamStatusCache(key);
 
-      const activity = lastActivityDB.map((db): UpdateStreamStatusDtoEvent => {
+      const activity = lastActivityDB.map((db): streamStatusType => {
         const matchCached = lastActivityCache.find(
-          (cache) => db.user === cache.user,
+          (cache) => db.user === cache.name,
         );
 
         return {
-          user: db.user,
+          id: db.id,
+          name: db.user,
           status: matchCached ? matchCached.status : 'offline',
           trackName: matchCached ? matchCached.trackName : null,
+          album: matchCached ? matchCached.album || null : null,
+          artist: matchCached ? matchCached.artist || null : null,
           lastActivity: dayjs(db.lastActivityTime).format(),
+          ...matchCached,
         };
       });
 
@@ -74,30 +80,34 @@ export class StreamStatusService {
     }
   }
 
-  async updateStreamStatus(message: {
-    id: string;
-    name: string;
-    status: string;
-    trackName: string;
-  }) {
+  async updateStreamStatus(message: updateStreamStatusMessageType) {
     try {
       const lastActivity = dayjs().format();
 
+      const user = await this.userService.findOneById(message.id);
+
+      if (!user) {
+        return;
+      }
+
       const streamStatus: streamStatusType = {
         id: message.id,
-        user: message.name,
+        name: user.name || null,
         status: message.status,
         trackName: message.trackName,
+        album: message.album,
+        artist: message.artist,
         lastActivity,
+        ...message,
       };
       const date = getCurrentDate();
-      const key = `${date}_${message.name}`;
+      const key = `${date}_${streamStatus.name}`;
 
       // process data to redis and db
       await this.redisCacheService.set(key, streamStatus);
       await this.updateLastActivityDB({
         lastActivityTime: new Date(lastActivity),
-        user: message.name,
+        user: user.name,
       });
     } catch (error) {
       throw new InternalServerErrorException();

@@ -65,8 +65,12 @@ export class EventGatewayGateway {
   async handleMessageStreamStatus(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    message: { id: string; name: string; status: string; trackName: string },
+    message: any,
   ): Promise<void> {
+    // get auth user from client
+    const authUser = client.handshake.auth.payload as WSAuthType;
+    message.id = authUser.sub;
+
     await this.streamStatusService.updateStreamStatus(message);
     await this.streamStatusService.getStreamStatus();
 
