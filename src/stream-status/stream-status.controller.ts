@@ -1,10 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { StreamStatusService } from './stream-status.service';
-import { UpdateStreamStatusDto } from './dto';
-import { getCurrentDate } from '../utils';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import * as dayjs from 'dayjs';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../authentication/decorator';
 
 @ApiTags('Stream Status')
