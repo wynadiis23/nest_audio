@@ -26,7 +26,7 @@ export class UserPlaylistService {
     try {
       const userPlaylist = [];
 
-      for (const id of payload.userId) {
+      for (const id of payload.userIds) {
         // validate duplicate hash
         const hash = this.createHash(id, payload.playlistId);
         const duplicate = await this.userPlaylistRepository.findOne({
@@ -80,12 +80,12 @@ export class UserPlaylistService {
     }
   }
 
-  async remove(userId: string, playlistId: string) {
+  async remove(userIds: string[], playlistId: string) {
     try {
       const query = this.userPlaylistRepository
         .createQueryBuilder('up')
         .delete()
-        .where('userId = :userId', { userId })
+        .where('userId IN (:...userIds)', { userIds })
         .andWhere('playlistId = :playlistId', { playlistId });
 
       return await query.execute();

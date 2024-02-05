@@ -4,7 +4,7 @@ import { IsPlaylistExist, IsUserExist } from '../../common/validator';
 
 export class AddUserPlaylistDto {
   @ApiProperty({
-    name: 'userId',
+    name: 'userIds',
     isArray: true,
     required: true,
     description: '81daa1e8-0eaf-4c11-907e-cb62f46b615f',
@@ -16,7 +16,7 @@ export class AddUserPlaylistDto {
     message: 'invalid user id',
     each: true,
   })
-  userId: string[];
+  userIds: string[];
 
   @ApiProperty({
     name: 'playlistId',
