@@ -12,9 +12,9 @@ export const WSAuthMiddleware = (
     try {
       const token =
         client.handshake.auth.token || client.handshake.headers.token;
-      const payload = await eventGatewayConfigService.isValidAuthHeader(token);
-      if (payload) {
-        client.handshake.auth.payload = payload;
+      const user = await eventGatewayConfigService.isValidAuthHeader(token);
+      if (user) {
+        client.handshake.auth.user = user;
         next();
       } else {
         next({

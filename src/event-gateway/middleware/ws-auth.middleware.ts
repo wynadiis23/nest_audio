@@ -13,9 +13,8 @@ export const SocketAuthMiddleware = (
       const authorization =
         client.handshake.auth.token || client.handshake.headers.token;
 
-      const payload =
-        eventGatewayConfigService.isValidAuthHeader(authorization);
-      client.handshake.auth.payload = payload;
+      const user = eventGatewayConfigService.isValidAuthHeader(authorization);
+      client.handshake.auth.user = user;
       next();
     } catch (error) {
       next(error);
