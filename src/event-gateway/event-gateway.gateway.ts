@@ -67,19 +67,29 @@ export class EventGatewayGateway {
     @MessageBody()
     message: any,
   ): Promise<void> {
+    // set user in redis
+    const authUser = client.handshake.auth.user as WSAuthType;
+    await this.redisCacheService.set(
+      `ws_user_${client.id}`,
+      {
+        id: client.id,
+        username: authUser.username,
+      },
+      0,
+    );
+
     // get auth user from client
-    const authUser = client.handshake.auth.payload as WSAuthType;
     message.id = authUser.sub;
 
     await this.streamStatusService.updateStreamStatus(message);
     await this.streamStatusService.getStreamStatus();
 
     // return back response to sender
-    client.emit('message', 'successfully transmitted');
+    client.emit(UPDATE_STREAM_STATUS_EVENT_CONST, 'successfully transmitted');
   }
 
   async handleConnection(client: Socket) {
-    const connectedUser = client.handshake.auth.payload as WSAuthType;
+    const connectedUser = client.handshake.auth.user as WSAuthType;
     console.log('client connect', client.id, connectedUser.username);
 
     await this.redisCacheService.set(

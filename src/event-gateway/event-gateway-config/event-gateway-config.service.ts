@@ -17,19 +17,19 @@ export class EventGatewayConfigService {
         throw new WsException('no token was provided');
       }
 
-      const token = authorization;
-      const payload = this.jwtService.verify(token, {
+      const token = authorization.split(' ');
+      const user = this.jwtService.verify(token[1], {
         secret: this.configService.get<string>('APP_ACCESS_TOKEN_SECRET'),
         ignoreExpiration: false,
       });
 
       if (client) {
-        client.handshake.auth.payload = payload;
+        client.handshake.auth.user = user;
 
         return client;
       }
 
-      return payload;
+      return user;
     } catch (error) {
       console.log(error);
       throw new WsException(error.message);
