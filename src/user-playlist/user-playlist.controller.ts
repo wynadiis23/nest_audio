@@ -51,14 +51,7 @@ export class UserPlaylistController {
   @Delete()
   @Public()
   @ApiOperation({
-    summary: 'Remove playlist for specified user',
-  })
-  @ApiQuery({
-    name: 'userId',
-    type: 'string',
-    required: true,
-    description: 'User id',
-    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+    summary: 'Remove user from specified playlist',
   })
   @ApiQuery({
     name: 'playlistId',
@@ -67,11 +60,22 @@ export class UserPlaylistController {
     description: 'Playlist id',
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
+  @ApiQuery({
+    name: 'userIds',
+    type: 'string',
+    isArray: true,
+    required: true,
+    description: 'User id',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
   async removeUserPlaylist(
-    @Query('userId') userId: string,
     @Query('playlistId') playlistId: string,
+    @Query('userIds') userIds: string[],
   ) {
-    await this.userPlaylistService.remove(userId, playlistId);
+    if (!Array.isArray(userIds)) {
+      userIds = [userIds];
+    }
+    await this.userPlaylistService.remove(userIds, playlistId);
 
     return {
       message: 'successfully remove user playlist',
