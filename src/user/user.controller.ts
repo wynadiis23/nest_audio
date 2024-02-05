@@ -27,6 +27,7 @@ import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 import { RoleEnum } from '../user-role/enum';
 import { RolesGuard } from '../authentication/guard';
+import { IsActiveEnum } from './enum';
 
 @ApiTags('User')
 @Controller('user')
@@ -37,6 +38,14 @@ export class UserController {
   @Public()
   @ApiOperation({
     summary: 'Get list all user',
+  })
+  @ApiQuery({
+    name: 'isActive',
+    type: 'string',
+    enum: IsActiveEnum,
+    required: false,
+    description: 'Active status',
+    example: '1',
   })
   @ApiQuery({
     name: 'filterBy',
@@ -90,7 +99,14 @@ export class UserController {
     example: 20,
   })
   async list(
-    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'isActive',
+      new DefaultValuePipe(IsActiveEnum.ACTIVE),
+      new ParseEnumPipe(IsActiveEnum),
+    )
+    isActive: IsActiveEnum,
+    @Query('filterBy', new DefaultValuePipe('name'))
+    filterBy: string,
     @Query(
       'filterOperator',
       new DefaultValuePipe(OperatorEnum.CONTAINS),
@@ -120,20 +136,13 @@ export class UserController {
       pageSize,
     };
 
-    return await this.userService.list(dataTableOptions);
+    return await this.userService.list(parseInt(isActive), dataTableOptions);
   }
 
   // update user
   @Put(':id')
   @Public()
   @ApiBody({ type: UpdateUserDto, required: true })
-  @ApiQuery({
-    name: 'id',
-    type: 'string',
-    required: true,
-    description: 'Id of user',
-    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
-  })
   @ApiOperation({ summary: 'Update user detail' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,

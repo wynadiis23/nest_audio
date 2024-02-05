@@ -2,7 +2,6 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { SignUpDto } from '../../authentication/dto';
 import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { IsActiveEnum } from '../enum';
-import { Transform } from 'class-transformer';
 
 export class UpdateUserDto extends PartialType(SignUpDto) {
   @ApiProperty({

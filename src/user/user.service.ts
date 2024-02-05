@@ -20,7 +20,7 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async list(dataTableOptions: IDataTable) {
+  async list(isActive: number, dataTableOptions: IDataTable) {
     try {
       const entity = 'user';
       let query = this.userRepository
@@ -41,7 +41,8 @@ export class UserService {
           Playlist,
           'playlist',
           'user_playlist.playlistId = playlist.id',
-        );
+        )
+        .where('user.isActive = :isActive', { isActive });
 
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy == 'name') {
@@ -141,6 +142,12 @@ export class UserService {
       }
 
       if (payload.isActive) {
+        const isActivePossibleValues = [0, 1];
+
+        if (!isActivePossibleValues.includes(+payload.isActive)) {
+          throw new BadRequestException('invalid inactive value');
+        }
+
         updateUser.isActive = payload.isActive;
       }
 
@@ -151,7 +158,6 @@ export class UserService {
 
       await this.userRepository.save(data);
     } catch (error) {
-      console.log(error);
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
