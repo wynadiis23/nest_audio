@@ -20,7 +20,7 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async list(dataTableOptions: IDataTable) {
+  async list(isActive: number, dataTableOptions: IDataTable) {
     try {
       const entity = 'user';
       let query = this.userRepository
@@ -41,7 +41,8 @@ export class UserService {
           Playlist,
           'playlist',
           'user_playlist.playlistId = playlist.id',
-        );
+        )
+        .where('user.isActive = :isActive', { isActive });
 
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy == 'name') {
