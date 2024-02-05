@@ -141,6 +141,12 @@ export class UserService {
       }
 
       if (payload.isActive) {
+        const isActivePossibleValues = [0, 1];
+
+        if (!isActivePossibleValues.includes(+payload.isActive)) {
+          throw new BadRequestException('invalid inactive value');
+        }
+
         updateUser.isActive = payload.isActive;
       }
 
@@ -151,7 +157,6 @@ export class UserService {
 
       await this.userRepository.save(data);
     } catch (error) {
-      console.log(error);
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }

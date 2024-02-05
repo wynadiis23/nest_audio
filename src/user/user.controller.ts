@@ -127,13 +127,6 @@ export class UserController {
   @Put(':id')
   @Public()
   @ApiBody({ type: UpdateUserDto, required: true })
-  @ApiQuery({
-    name: 'id',
-    type: 'string',
-    required: true,
-    description: 'Id of user',
-    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
-  })
   @ApiOperation({ summary: 'Update user detail' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
