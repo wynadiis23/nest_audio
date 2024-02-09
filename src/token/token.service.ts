@@ -66,6 +66,12 @@ export class TokenService {
     }
   }
 
+  decodeToken(token: string) {
+    const decoded = this.jwtService.decode(token);
+
+    return decoded;
+  }
+
   async invalidateToken() {
     try {
       const expiredTokenIds: string[] = [];
@@ -74,7 +80,7 @@ export class TokenService {
       });
 
       for (const token of tokens) {
-        const decodedRt = this.jwtService.decode(token.refreshToken);
+        const decodedRt = this.decodeToken(token.refreshToken);
         const exp = decodedRt['exp'];
 
         /**

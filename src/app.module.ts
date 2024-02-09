@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TracksModule } from './tracks/tracks.module';
@@ -34,6 +34,7 @@ import { AccessTokenAuthGuard } from './authentication/guard';
 import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
 import { UserPlaylistModule } from './user-playlist/user-playlist.module';
 import { EventGatewayModule } from './event-gateway/event-gateway.module';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -83,4 +84,8 @@ import { EventGatewayModule } from './event-gateway/event-gateway.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
