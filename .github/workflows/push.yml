@@ -20,6 +20,9 @@ jobs:
           echo APP_REFRESH_TOKEN_EXP=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
           echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
           echo APP_TRACK_FOLDER=${{ secrets.APP_TRACK_FOLDER }} >> .env
+          echo OAUTH_GOOGLE_ID=${{ secrets.OAUTH_GOOGLE_ID }} >> .env
+          echo OAUTH_GOOGLE_SECRET=${{ secrets.OAUTH_GOOGLE_SECRET }} >> .env
+          echo OAUTH_GOOGLE_CALLBACK_URL=${{ secrets.OAUTH_GOOGLE_CALLBACK_URL }} >> .env
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
           echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
