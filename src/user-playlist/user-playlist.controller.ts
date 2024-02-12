@@ -7,6 +7,7 @@ import {
   Post,
   Query,
   Req,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -29,7 +30,7 @@ export class UserPlaylistController {
   @Public()
   @ApiOperation({ summary: 'Add playlist to specified user' })
   @ApiBody({ type: AddUserPlaylistDto, required: true })
-  async create(@Body() dto: AddUserPlaylistDto) {
+  async create(@Body(ValidationPipe) dto: AddUserPlaylistDto) {
     await this.userPlaylistService.add(dto);
 
     return {
@@ -69,8 +70,8 @@ export class UserPlaylistController {
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
   async removeUserPlaylist(
-    @Query('playlistId') playlistId: string,
-    @Query('userIds') userIds: string[],
+    @Query('playlistId', new ParseUUIDPipe()) playlistId: string,
+    @Query('userIds', new ParseUUIDPipe()) userIds: string[],
   ) {
     if (!Array.isArray(userIds)) {
       userIds = [userIds];

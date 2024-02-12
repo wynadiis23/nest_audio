@@ -1,4 +1,11 @@
-import { Body, Controller, Delete, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PlaylistContentService } from './playlist-content.service';
 import { PlaylistContentDto } from './dto/playlist-content.dto';
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -41,8 +48,8 @@ export class PlaylistContentController {
   })
   @Delete()
   async delete(
-    @Query('playlistId') playlistId: string,
-    @Query('trackIds') trackIds: string[],
+    @Query('playlistId', new ParseUUIDPipe()) playlistId: string,
+    @Query('trackIds', new ParseUUIDPipe()) trackIds: string[],
   ) {
     if (!Array.isArray(trackIds)) {
       trackIds = [trackIds];

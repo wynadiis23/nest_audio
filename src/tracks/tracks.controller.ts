@@ -8,6 +8,7 @@ import {
   Param,
   ParseEnumPipe,
   ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
   Res,
@@ -157,7 +158,7 @@ export class TracksController {
     description: 'Id of track',
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
-  async delete(@Query('id') id: string) {
+  async delete(@Query('id', new ParseUUIDPipe()) id: string) {
     await this.tracksService.delete(id);
 
     return {
