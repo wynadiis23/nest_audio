@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   ArrayNotEmpty,
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsString,
@@ -42,6 +43,16 @@ export class SignUpDto {
   })
   @Transform(({ value }) => value.toString().trim().toLowerCase())
   username: string;
+
+  @ApiProperty({
+    name: 'email',
+    type: 'string',
+    required: true,
+    description: 'User email',
+    example: 'john@mail.com',
+  })
+  @IsEmail()
+  email: string;
 
   @ApiProperty({
     name: 'name',

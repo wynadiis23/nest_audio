@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -12,9 +13,14 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticationService } from './authentication.service';
 import { SignInDto, SignUpDto } from './dto';
 import { Response } from 'express';
-import { LocalAuthGuard, RefreshTokenAuthGuard, RolesGuard } from './guard';
+import {
+  GoogleOAuthGuard,
+  LocalAuthGuard,
+  RefreshTokenAuthGuard,
+  RolesGuard,
+} from './guard';
 import { GetAuthorizedUser, Public, Roles } from './decorator';
-import { AuthorizedUserType } from './types';
+import { AuthorizedUserType, googleOAuthType } from './types';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 import { ConfigService } from '@nestjs/config';
 import { RoleEnum } from '../user-role/enum';
@@ -63,6 +69,7 @@ export class AuthenticationController {
   }
 
   @Post('sign-up')
+  @Public()
   @ApiBearerAuth()
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
@@ -137,5 +144,22 @@ export class AuthenticationController {
     return {
       message: 'Sign out successfully',
     };
+  }
+
+  // OAuth
+  @Public()
+  @UseGuards(GoogleOAuthGuard)
+  @Get('/oauth/google')
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async googleAuth(@Req() req) {}
+
+  @Public()
+  @UseGuards(GoogleOAuthGuard)
+  @Get('/oauth/google-redirect')
+  async googleRedirect(@Req() req, @Res() res: Response) {
+    const user = req.user as googleOAuthType;
+
+    // google auth
+    return await this.authenticationService.googleOAuth(user, res);
   }
 }
