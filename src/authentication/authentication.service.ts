@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -11,9 +12,12 @@ import { JwtService } from '@nestjs/jwt';
 import { appConfiguration } from '../configs';
 import { ConfigType } from '@nestjs/config';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
-import { AuthorizedUserType, tokenPayload } from './types';
+import { AuthorizedUserType, googleOAuthType, tokenPayload } from './types';
 import { TokenService } from '../token/token.service';
 import { v4 as uuid } from 'uuid';
+import { RoleEnum } from '../user-role/enum';
+import { User } from '../user/entity/user.entity';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthenticationService {
@@ -61,6 +65,7 @@ export class AuthenticationService {
       const user = await this.userService.create(
         payload.username,
         payload.name,
+        payload.email,
         payload.password,
         payload.roles,
       );
@@ -237,5 +242,46 @@ export class AuthenticationService {
         domain: this.appConfig.appCookieDomain,
       },
     };
+  }
+
+  async googleOAuth(googleOAuthPayload: googleOAuthType, res: Response) {
+    try {
+      let user: User;
+      // check if email was registere or not
+      // if not register the user (SIGN UP)
+      // if yes generate token (SIGN IN)
+
+      user = await this.userService.findOneByEmail(googleOAuthPayload.email);
+
+      if (!user) {
+        user = await this.signUp({
+          email: googleOAuthPayload.email,
+          name: googleOAuthPayload.name,
+          username: googleOAuthPayload.name,
+          roles: [RoleEnum.GENERAL],
+          password: 'some-password',
+        });
+
+        console.log('sign up');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.username);
+      // save token
+      await this.tokenService.create(tokens.refreshToken, user.id, tokens.tf);
+
+      const payload = {
+        username: user.username,
+        roles: user.roles.map((role) => role.code),
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
+
+      res.status(HttpStatus.OK).json({
+        message: 'sign in data authenticated',
+        data: payload,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 }

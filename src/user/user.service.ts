@@ -76,11 +76,17 @@ export class UserService {
   async create(
     username: string,
     name: string,
+    email: string,
     password: string,
     roles: string[],
   ) {
     try {
-      const data = this.userRepository.create({ username, name, password });
+      const data = this.userRepository.create({
+        username,
+        email,
+        name,
+        password,
+      });
 
       const userRole = roles.map((role) => ({
         userId: data.id,
@@ -111,6 +117,18 @@ export class UserService {
       return await this.userRepository.findOne({
         where: {
           id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async findOneByEmail(email: string) {
+    try {
+      return await this.userRepository.findOne({
+        where: {
+          email,
         },
       });
     } catch (error) {

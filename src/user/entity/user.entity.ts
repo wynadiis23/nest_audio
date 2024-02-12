@@ -15,10 +15,13 @@ import { UserRole } from '../../user-role/entity/user-role.entity';
 import { UserPlaylist } from '../../user-playlist/entity/user-playlist.entity';
 
 @Entity({ name: 'user' })
-@Unique(['username'])
+@Unique(['username', 'email'])
 export class User extends SharedEntity {
   @Column({ length: 15, nullable: false })
   username: string;
+
+  @Column({ length: 128, name: 'email' })
+  email: string;
 
   @Exclude({ toPlainOnly: true })
   @Column({ nullable: false })
