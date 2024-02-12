@@ -11,4 +11,11 @@ export const appConfiguration = registerAs('app', () => ({
   refreshTokenExpiration: process.env.APP_REFRESH_TOKEN_EXP,
   appCookieDomain: process.env.APP_COOKIE_DOMAIN,
   appTrackFolder: process.env.APP_TRACK_FOLDER,
+
+  google: {
+    clientID: process.env.OAUTH_GOOGLE_ID,
+    clientSecret: process.env.OAUTH_GOOGLE_SECRET,
+    callbackURL: process.env.OAUTH_GOOGLE_CALLBACK_URL,
+    scope: ['profile', 'email'],
+  },
 }));

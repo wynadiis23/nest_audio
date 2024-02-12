@@ -4,9 +4,10 @@ import { AuthenticationService } from './authentication.service';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenModule } from '../token/token.module';
+import { SocialModule } from './social/social.module';
 
 @Module({
-  imports: [UserModule, TokenModule, JwtModule.register({})],
+  imports: [UserModule, TokenModule, JwtModule.register({}), SocialModule],
   controllers: [AuthenticationController],
   providers: [AuthenticationService],
   exports: [AuthenticationService],

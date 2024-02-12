@@ -35,6 +35,7 @@ import { TracksMetadataModule } from './tracks-metadata/tracks-metadata.module';
 import { UserPlaylistModule } from './user-playlist/user-playlist.module';
 import { EventGatewayModule } from './event-gateway/event-gateway.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { GoogleOAuthStrategy } from './authentication/social/strategy/google-oauth.strategy';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     LocalStrategy,
     JwtStrategy,
     JwtRefreshTokenStrategy,
+    GoogleOAuthStrategy,
     {
       // Use AccessTokenAuthGuard as global guard
       provide: APP_GUARD,
