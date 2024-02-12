@@ -27,7 +27,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  app.use(helmet({ crossOriginResourcePolicy: false }));
   app.enableCors({
     origin: whitelistDomain,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
@@ -50,6 +49,10 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
+
+  // swagger first then helmet
+  // for swagger access in local network without domain
+  app.use(helmet({ crossOriginResourcePolicy: false }));
 
   await app.listen(configService.get<number>('APP_PORT'));
 }
