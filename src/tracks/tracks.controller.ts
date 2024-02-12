@@ -142,7 +142,7 @@ export class TracksController {
   @ApiOperation({
     summary: 'Get list of available track for playlist',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'playlistId',
     required: true,
     type: 'string',
@@ -201,7 +201,7 @@ export class TracksController {
     example: 20,
   })
   async playlistAvailableTracks(
-    @Query('playlistId', new ParseUUIDPipe()) playlistId: string,
+    @Param('playlistId') playlistId: string,
     @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
     @Query(
       'filterOperator',
