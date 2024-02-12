@@ -5,6 +5,7 @@ import { Socket } from 'socket.io';
 @Catch(WsException)
 export class AllExceptionsSocketFilter extends BaseWsExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
+    console.log(exception);
     const client = host.switchToWs().getClient<Socket>();
     console.log('akaka');
 
@@ -16,15 +17,15 @@ export class AllExceptionsSocketFilter extends BaseWsExceptionFilter {
 
     const details = error instanceof Object ? { ...error } : { message: error };
 
-    client.emit('exception', {
-      event: 'error',
-      data: {
-        id: (client as any).id,
-        rid: data.rid,
-        ...details,
-      },
-    });
+    // client.emit('exception', {
+    //   event: 'error',
+    //   data: {
+    //     id: (client as any).id,
+    //     rid: data.rid,
+    //     ...details,
+    //   },
+    // });
 
-    client.disconnect();
+    // client.disconnect();
   }
 }
