@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayNotEmpty, IsNotEmpty, IsString } from 'class-validator';
+import { IsPlaylistExist } from '../../common/validator';
 
 export class PlaylistContentDto {
   @ApiProperty({
@@ -22,5 +23,8 @@ export class PlaylistContentDto {
   })
   @IsString()
   @IsNotEmpty()
+  @IsPlaylistExist('id', {
+    message: 'invalid playlist id',
+  })
   playlistId: string;
 }

@@ -206,6 +206,7 @@ export class PlaylistService {
   async scaffoldingUpdatePlaylist(payload: UpdatePlaylistEvent) {
     try {
       const playlist = await this.detail(payload.id);
+      if (!playlist) return;
 
       this.eventEmitter.emit('update-playlist', {
         ...payload,

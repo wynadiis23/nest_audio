@@ -12,6 +12,9 @@ export class AddUserPlaylistDto {
   })
   @ArrayNotEmpty()
   @IsNotEmpty()
+  @IsUUID(4, {
+    each: true,
+  })
   @IsUserExist('id', {
     message: 'invalid user id',
     each: true,
