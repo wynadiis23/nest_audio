@@ -134,11 +134,13 @@ export class TracksService {
         );
       }
 
-      availableTrackQuery = availableTrackQuery.andWhere(
-        new Brackets((qb) => {
-          qb.where('tracks.id NOT IN (:...ids)', { ids });
-        }),
-      );
+      if (ids.length) {
+        availableTrackQuery = availableTrackQuery.andWhere(
+          new Brackets((qb) => {
+            qb.where('tracks.id NOT IN (:...ids)', { ids });
+          }),
+        );
+      }
 
       if (dataTableOptions.sortBy) {
         const sortMapped = trackListSortMapping();
