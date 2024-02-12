@@ -142,9 +142,99 @@ export class TracksController {
   @ApiOperation({
     summary: 'Get list of available track for playlist',
   })
-  @ApiParam({ name: 'playlistId', required: true, type: 'string' })
-  async playlistAvailableTracks(@Param('playlistId') playlistId: string) {
-    return await this.tracksService.getAvailableTrackForPlaylist(playlistId);
+  @ApiQuery({
+    name: 'playlistId',
+    required: true,
+    type: 'string',
+    description: 'Playlist Id',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'Summit',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: 'string',
+    required: false,
+    description: 'Sort by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    type: 'string',
+    enum: SortEnum,
+    required: false,
+    description: 'Sort order',
+    example: 'ASC',
+  })
+  @ApiQuery({
+    name: 'pageIndex',
+    type: 'number',
+    required: false,
+    description: 'Page index',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: 'number',
+    required: false,
+    description: 'Page size',
+    example: 20,
+  })
+  async playlistAvailableTracks(
+    @Query('playlistId', new ParseUUIDPipe()) playlistId: string,
+    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+    @Query('sortBy', new DefaultValuePipe('name')) sortBy: string,
+    @Query(
+      'sortOrder',
+      new DefaultValuePipe(SortEnum.ASC),
+      new ParseEnumPipe(SortEnum),
+    )
+    sortOrder: SortEnum,
+    @Query('pageIndex', new DefaultValuePipe(0), ParseIntPipe)
+    pageIndex: number,
+    @Query('pageSize', new DefaultValuePipe(0), ParseIntPipe)
+    pageSize: number,
+  ) {
+    const dataTableOptions: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+      sortBy,
+      sortOrder,
+      pageIndex,
+      pageSize,
+    };
+    return await this.tracksService.getAvailableTrackForPlaylist(
+      playlistId,
+      dataTableOptions,
+    );
   }
 
   @Delete()

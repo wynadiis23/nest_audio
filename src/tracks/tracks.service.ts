@@ -11,7 +11,7 @@ import { createReadStream } from 'fs';
 import * as fs from 'fs';
 import * as rangeParser from 'range-parser';
 import { Tracks } from './entity/tracks.entity';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { Brackets, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
@@ -88,8 +88,12 @@ export class TracksService {
     return result;
   }
 
-  async getAvailableTrackForPlaylist(playlistId: string) {
+  async getAvailableTrackForPlaylist(
+    playlistId: string,
+    dataTableOptions: IDataTable,
+  ) {
     try {
+      let sortEntity: string;
       // get list track of current playlist
       const query = this.tracksRepository
         .createQueryBuilder('tracks')
@@ -109,11 +113,55 @@ export class TracksService {
       const alreadyAddedTrack = await query.getMany();
       const ids = alreadyAddedTrack.map((track) => track.id);
 
-      return await this.tracksRepository.find({
-        where: {
-          id: Not(In(ids)),
-        },
-      });
+      let availableTrackQuery = this.tracksRepository
+        .createQueryBuilder('tracks')
+        .leftJoinAndMapOne(
+          'tracks.trackMetadata',
+          TracksMetadata,
+          'tracks_metadata',
+          'tracks_metadata.trackId = tracks.id',
+        );
+
+      if (dataTableOptions.filterBy) {
+        availableTrackQuery = availableTrackQuery.where(
+          new Brackets((qb) => {
+            qb.where(
+              `CONCAT(LOWER(tracks_metadata.name), LOWER(tracks_metadata.artist)) LIKE '%' || :filterValue || '%'`,
+            ).orWhere(
+              `CONCAT(LOWER(tracks_metadata.artist), LOWER(tracks_metadata.name)) LIKE '%' || :filterValue || '%'`,
+            );
+          }),
+        );
+      }
+
+      availableTrackQuery = availableTrackQuery.andWhere(
+        new Brackets((qb) => {
+          qb.where('tracks.id NOT IN (:...ids)', { ids });
+        }),
+      );
+
+      if (dataTableOptions.sortBy) {
+        const sortMapped = trackListSortMapping();
+        sortEntity = sortMapped[dataTableOptions.sortBy] || sortMapped['name'];
+
+        availableTrackQuery = availableTrackQuery.orderBy(
+          sortEntity,
+          dataTableOptions.sortOrder,
+        );
+      }
+
+      const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+      const result = await availableTrackQuery
+        .setParameter(
+          'filterValue',
+          dataTableOptions.filterValue.toLocaleLowerCase(),
+        )
+        .skip(skip)
+        .take(dataTableOptions.pageSize)
+        .getManyAndCount();
+
+      return result;
     } catch (error) {
       throw new InternalServerErrorException();
     }
