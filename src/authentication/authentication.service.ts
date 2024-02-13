@@ -270,7 +270,9 @@ export class AuthenticationService {
         user = await this.signUp({
           email: googleOAuthPayload.email,
           name: googleOAuthPayload.name,
-          username: googleOAuthPayload.name.replace(/ /g, '_'),
+          username: googleOAuthPayload.email
+            .substring(0, googleOAuthPayload.email.indexOf('@'))
+            .toLocaleLowerCase(),
           roles: [RoleEnum.GENERAL],
           password: null,
           oauthId: googleOAuthPayload.providerId,
