@@ -37,7 +37,11 @@ export class PlaylistController {
   @ApiOperation({ summary: 'Create playlist' })
   @ApiBody({ type: PlaylistDto, required: true })
   async create(@Body() dto: PlaylistDto) {
-    return await this.playlistService.create(dto);
+    await this.playlistService.create(dto);
+
+    return {
+      message: 'successfully created playlist',
+    };
   }
 
   @Get()
