@@ -17,7 +17,7 @@ import { UserPlaylist } from '../../user-playlist/entity/user-playlist.entity';
 @Entity({ name: 'user' })
 @Unique(['username', 'email'])
 export class User extends SharedEntity {
-  @Column({ length: 15, nullable: false })
+  @Column({ length: 128, nullable: false })
   username: string;
 
   @Column({ length: 128, name: 'email' })
