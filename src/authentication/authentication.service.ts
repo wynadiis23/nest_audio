@@ -32,6 +32,7 @@ export class AuthenticationService {
   async signIn(payload: SignInDto) {
     try {
       const valid = await this.validateUser(payload.username, payload.password);
+      console.log(valid);
 
       if (!valid) {
         throw new UnauthorizedException('Invalid username or password');
@@ -91,6 +92,13 @@ export class AuthenticationService {
     try {
       // validate username and password
       const user = await this.userService.findOneByUsername(username);
+
+      if (user.oauthId) {
+        throw new BadRequestException(
+          'User was registered with OAuth. Please login using available OAuth provider',
+        );
+      }
+
       const validatePass = await user.validatePassword(password);
       if (user && validatePass) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -101,6 +109,9 @@ export class AuthenticationService {
 
       return null;
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
