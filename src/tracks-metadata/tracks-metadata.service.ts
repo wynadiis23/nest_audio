@@ -10,17 +10,16 @@ import { parseFile, selectCover } from 'music-metadata';
 import { join } from 'path';
 import { CreateMetadataDto, UpdateMetadataDto } from './dto';
 import { tracksMetadata } from './type/tracks-metadata.type';
-import { Tracks } from '../tracks/entity/tracks.entity';
 import { GetMetadataDto } from './dto/get-metadata.dto';
 import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TracksMetadataService {
   constructor(
     @InjectRepository(TracksMetadata)
     private readonly tracksMetadataRepository: Repository<TracksMetadata>,
-    @InjectRepository(Tracks)
-    private readonly tracksRepository: Repository<Tracks>,
+    private readonly configService: ConfigService,
   ) {}
 
   async getMetadata(payload: GetMetadataDto) {
@@ -28,6 +27,19 @@ export class TracksMetadataService {
       const metadata = await parseFile(join(__dirname, '../..', payload.path), {
         duration: true,
       });
+
+      const bitRate = metadata.format.bitrate;
+      const minimumBitRate = this.configService.get<number>(
+        'APP_TRACK_MINIMUM_BIT_RATE',
+      );
+
+      if (bitRate / 1000 < +minimumBitRate) {
+        throw new BadRequestException(
+          `${
+            payload.name
+          } does not meet the minimum bit rate ${+minimumBitRate} kbit/s`,
+        );
+      }
 
       const info: tracksMetadata = {
         trackId: payload.id,
@@ -46,6 +58,9 @@ export class TracksMetadataService {
 
       return info;
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
