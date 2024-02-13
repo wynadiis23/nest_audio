@@ -339,17 +339,24 @@ export class TracksService {
   }
 
   async getTrackMetadata(id: string) {
-    const trackMetadata = await this.tracksRepository.findOne({
-      where: {
-        id: id,
-      },
-    });
+    try {
+      const trackMetadata = await this.tracksRepository.findOne({
+        where: {
+          id: id,
+        },
+      });
 
-    if (!trackMetadata) {
-      throw new NotFoundException();
+      if (!trackMetadata) {
+        throw new BadRequestException('track not found');
+      }
+
+      return trackMetadata;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new InternalServerErrorException();
     }
-
-    return trackMetadata;
   }
 
   async getMultipleTrackMetadata(ids: string[]) {
@@ -395,7 +402,11 @@ export class TracksService {
 
       const fileSize = this.getFileSize(trackPath);
 
-      const { start, end } = this.parseRange(range, fileSize);
+      // const { start, end } = this.parseRange(range, fileSize);
+      const CHUNK_SIZE = 10 ** 6; // 1MB
+      const start = Number(range.replace(/\D/g, ''));
+      const end = Math.min(start + CHUNK_SIZE, fileSize - 1);
+      const contentLength = end - start + 1;
 
       const stream = createReadStream(trackPath, {
         start,
@@ -405,6 +416,7 @@ export class TracksService {
       const streamableFile = new StreamableFile(stream, {
         disposition: `inline; filename="${trackMetadata.name}"`,
         type: trackMetadata.mimetype,
+        length: contentLength,
       }).setErrorLogger((error) => {
         Logger.warn(error.message, 'Streamable');
       });
@@ -416,6 +428,7 @@ export class TracksService {
         contentRange,
       };
     } catch (error) {
+      console.log(error);
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
@@ -435,10 +448,12 @@ export class TracksService {
       }
 
       const stream = createReadStream(trackPath);
+      const length = this.getFileSize(trackPath);
 
       return new StreamableFile(stream, {
         disposition: `inline; filename="${trackMetadata.name}"`,
         type: trackMetadata.mimetype,
+        length: length,
       }).setErrorLogger((error) => {
         Logger.warn(error.message, 'Streamable');
       });
