@@ -10,6 +10,8 @@ import { AddUserPlaylistDto } from './dto';
 import * as crypto from 'crypto';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { User } from '../user/entity/user.entity';
+import { IDataTable } from '../common/interface';
+import { selectQuery } from '../common/query-builder';
 
 @Injectable()
 export class UserPlaylistService {
@@ -62,9 +64,50 @@ export class UserPlaylistService {
     }
   }
 
-  async getPublishedUserPlaylist(userId: string) {
+  async getPublishedPlaylist(dataTableOptions: IDataTable) {
     try {
-      const query = this.playlistRepository
+      const aliasEntity = 'playlist';
+      let query = this.playlistRepository
+        .createQueryBuilder('playlist')
+        .leftJoin(
+          UserPlaylist,
+          'user_playlist',
+          'user_playlist.playlistId = playlist.id',
+        )
+        .where('playlist.published = 1')
+        .andWhere('user_playlist.userId IS NULL');
+
+      if (dataTableOptions.filterBy) {
+        query = selectQuery(
+          query,
+          aliasEntity,
+          dataTableOptions.filterOperator,
+          dataTableOptions.filterBy,
+          dataTableOptions.filterValue,
+        );
+      }
+
+      const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+      const result = await query
+        .skip(skip)
+        .take(dataTableOptions.pageSize)
+        .orderBy(
+          `${aliasEntity}.${dataTableOptions.sortBy}`,
+          dataTableOptions.sortOrder,
+        )
+        .getManyAndCount();
+
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getPublishedUserPlaylist(dataTableOptions: IDataTable, userId: string) {
+    try {
+      const aliasEntity = 'playlist';
+      let query = this.playlistRepository
         .createQueryBuilder('playlist')
         .leftJoin(
           UserPlaylist,
@@ -74,7 +117,28 @@ export class UserPlaylistService {
         .where('playlist.published = 1')
         .andWhere('user_playlist.userId = :userId', { userId });
 
-      return await query.getMany();
+      if (dataTableOptions.filterBy) {
+        query = selectQuery(
+          query,
+          aliasEntity,
+          dataTableOptions.filterOperator,
+          dataTableOptions.filterBy,
+          dataTableOptions.filterValue,
+        );
+      }
+
+      const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+      const result = await query
+        .skip(skip)
+        .take(dataTableOptions.pageSize)
+        .orderBy(
+          `${aliasEntity}.${dataTableOptions.sortBy}`,
+          dataTableOptions.sortOrder,
+        )
+        .getManyAndCount();
+
+      return result;
     } catch (error) {
       throw new InternalServerErrorException();
     }
