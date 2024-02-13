@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Length,
   Matches,
@@ -109,4 +110,10 @@ export class SignUpDto {
   @ArrayNotEmpty()
   @IsEnum(RoleEnum, { each: true })
   roles: RoleEnum[];
+
+  @IsOptional()
+  oauthProvider?: string;
+
+  @IsOptional()
+  oauthId?: string;
 }

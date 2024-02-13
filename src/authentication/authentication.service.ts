@@ -68,6 +68,8 @@ export class AuthenticationService {
         payload.email,
         payload.password,
         payload.roles,
+        payload.oauthProvider,
+        payload.oauthId,
       );
 
       // access token and refresh token
@@ -257,9 +259,11 @@ export class AuthenticationService {
         user = await this.signUp({
           email: googleOAuthPayload.email,
           name: googleOAuthPayload.name,
-          username: googleOAuthPayload.name,
+          username: googleOAuthPayload.name.replace(/ /g, '_'),
           roles: [RoleEnum.GENERAL],
-          password: 'some-password',
+          password: null,
+          oauthId: googleOAuthPayload.providerId,
+          oauthProvider: googleOAuthPayload.provider,
         });
 
         console.log('sign up');
@@ -275,6 +279,15 @@ export class AuthenticationService {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       };
+
+      const generatedCookie = this.generateRefreshTokenCookie(
+        tokens.refreshToken,
+      );
+      res.cookie(
+        generatedCookie.key,
+        generatedCookie.refreshToken,
+        generatedCookie.options,
+      );
 
       res.status(HttpStatus.OK).json({
         message: 'sign in data authenticated',

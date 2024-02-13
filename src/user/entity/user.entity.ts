@@ -24,7 +24,7 @@ export class User extends SharedEntity {
   email: string;
 
   @Exclude({ toPlainOnly: true })
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   password: string;
 
   @Column({ default: 1, comment: '1 for active and 0 for inactive' })
@@ -32,6 +32,12 @@ export class User extends SharedEntity {
 
   @Column({ length: 128, name: 'name' })
   name: string;
+
+  @Column({ nullable: true, name: 'oauth_provider' })
+  oauthProvider: string;
+
+  @Column({ nullable: true, name: 'oauth_id' })
+  oauthId: string;
 
   @OneToMany(() => Token, (token) => token.user, {
     cascade: true,
