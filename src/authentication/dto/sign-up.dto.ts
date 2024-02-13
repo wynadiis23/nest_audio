@@ -11,7 +11,7 @@ import {
   Matches,
   Validate,
 } from 'class-validator';
-import { IsNotExist } from '../../common/validator';
+import { IsEmailExist, IsNotExist } from '../../common/validator';
 import { RoleEnum } from '../../user-role/enum';
 
 export class SignUpDto {
@@ -53,6 +53,9 @@ export class SignUpDto {
     example: 'john@mail.com',
   })
   @IsEmail()
+  @IsEmailExist('email', {
+    message: 'User with this email already exist',
+  })
   email: string;
 
   @ApiProperty({
