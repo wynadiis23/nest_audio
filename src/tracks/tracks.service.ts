@@ -402,7 +402,11 @@ export class TracksService {
 
       const fileSize = this.getFileSize(trackPath);
 
-      const { start, end } = this.parseRange(range, fileSize);
+      // const { start, end } = this.parseRange(range, fileSize);
+      const CHUNK_SIZE = 10 ** 6; // 1MB
+      const start = Number(range.replace(/\D/g, ''));
+      const end = Math.min(start + CHUNK_SIZE, fileSize - 1);
+      const contentLength = end - start + 1;
 
       const stream = createReadStream(trackPath, {
         start,
@@ -412,6 +416,7 @@ export class TracksService {
       const streamableFile = new StreamableFile(stream, {
         disposition: `inline; filename="${trackMetadata.name}"`,
         type: trackMetadata.mimetype,
+        length: contentLength,
       }).setErrorLogger((error) => {
         Logger.warn(error.message, 'Streamable');
       });
