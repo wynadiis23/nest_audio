@@ -11,7 +11,7 @@ import { createReadStream } from 'fs';
 import * as fs from 'fs';
 import * as rangeParser from 'range-parser';
 import { Tracks } from './entity/tracks.entity';
-import { Brackets, DataSource, In, Not, Repository } from 'typeorm';
+import { Brackets, DataSource, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { MultipleTracksDto } from './dto/multiple-tracks.dto';
@@ -236,11 +236,18 @@ export class TracksService {
       } catch (error) {
         await queryRunner.rollbackTransaction();
 
+        if (error instanceof BadRequestException) {
+          throw new BadRequestException(error.message);
+        }
+
         throw new InternalServerErrorException();
       } finally {
         await queryRunner.release();
       }
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }

@@ -20,6 +20,7 @@ jobs:
           echo APP_REFRESH_TOKEN_EXP=${{ secrets.APP_REFRESH_TOKEN_EXP }} >> .env
           echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
           echo APP_TRACK_FOLDER=${{ secrets.APP_TRACK_FOLDER }} >> .env
+          echo APP_TRACK_MINIMUM_BIT_RATE=${{ secrets.APP_TRACK_MINIMUM_BIT_RATE }} >> .env
           echo OAUTH_GOOGLE_ID=${{ secrets.OAUTH_GOOGLE_ID }} >> .env
           echo OAUTH_GOOGLE_SECRET=${{ secrets.OAUTH_GOOGLE_SECRET }} >> .env
           echo OAUTH_GOOGLE_CALLBACK_URL=${{ secrets.OAUTH_GOOGLE_CALLBACK_URL }} >> .env
