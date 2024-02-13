@@ -79,6 +79,8 @@ export class UserService {
     email: string,
     password: string,
     roles: string[],
+    oauthProvider?: string,
+    oauthId?: string,
   ) {
     try {
       const data = this.userRepository.create({
@@ -86,6 +88,8 @@ export class UserService {
         email,
         name,
         password,
+        oauthProvider,
+        oauthId,
       });
 
       const userRole = roles.map((role) => ({

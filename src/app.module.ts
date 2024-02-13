@@ -19,6 +19,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { UserModule } from './user/user.module';
 import {
+  EmailExistsValidation,
   IsNotExist,
   PlaylistExistsValidation,
   UserExistsValidation,
@@ -75,6 +76,7 @@ import { GoogleOAuthStrategy } from './authentication/strategy/google-oauth.stra
     IsNotExist,
     UserExistsValidation,
     PlaylistExistsValidation,
+    EmailExistsValidation,
     LocalStrategy,
     JwtStrategy,
     JwtRefreshTokenStrategy,

@@ -69,7 +69,6 @@ export class AuthenticationController {
   }
 
   @Post('sign-up')
-  @Public()
   @ApiBearerAuth()
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
@@ -150,7 +149,7 @@ export class AuthenticationController {
   @Public()
   @UseGuards(GoogleOAuthGuard)
   @Get('/oauth/google')
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   async googleAuth(@Req() req) {}
 
   @Public()
