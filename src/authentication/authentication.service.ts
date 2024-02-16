@@ -32,7 +32,6 @@ export class AuthenticationService {
   async signIn(payload: SignInDto) {
     try {
       const valid = await this.validateUser(payload.username, payload.password);
-      console.log(valid);
 
       if (!valid) {
         throw new UnauthorizedException('Invalid username or password');
@@ -98,7 +97,7 @@ export class AuthenticationService {
       }
 
       if (user.oauthId) {
-        throw new BadRequestException(
+        throw new UnauthorizedException(
           'User was registered with OAuth. Please login using available OAuth provider',
         );
       }
@@ -113,9 +112,7 @@ export class AuthenticationService {
 
       return null;
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw new BadRequestException(error.message);
-      } else if (error instanceof UnauthorizedException) {
+      if (error instanceof UnauthorizedException) {
         throw new UnauthorizedException(error.message);
       }
       throw new InternalServerErrorException();
