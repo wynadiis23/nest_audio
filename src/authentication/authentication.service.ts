@@ -272,10 +272,8 @@ export class AuthenticationService {
       if (!user) {
         user = await this.signUp({
           email: googleOAuthPayload.email,
-          name: googleOAuthPayload.name,
-          username: googleOAuthPayload.email
-            .substring(0, googleOAuthPayload.email.indexOf('@'))
-            .toLocaleLowerCase(),
+          name: googleOAuthPayload.email,
+          username: googleOAuthPayload.email,
           roles: [RoleEnum.GENERAL],
           password: null,
           oauthId: googleOAuthPayload.providerId,
