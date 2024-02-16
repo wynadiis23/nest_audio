@@ -18,6 +18,7 @@ import { v4 as uuid } from 'uuid';
 import { RoleEnum } from '../user-role/enum';
 import { User } from '../user/entity/user.entity';
 import { Response } from 'express';
+import { UpdateLastAcivityUserColumnToUnique1705655694568 } from '../database/migrations/1705655694568-UpdateLastAcivityUserColumnToUnique';
 
 @Injectable()
 export class AuthenticationService {
@@ -93,7 +94,11 @@ export class AuthenticationService {
       // validate username and password
       const user = await this.userService.findOneByUsername(username);
 
-      if (user.oauthId) {
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      if (user?.oauthId) {
         throw new BadRequestException(
           'User was registered with OAuth. Please login using available OAuth provider',
         );
@@ -111,6 +116,8 @@ export class AuthenticationService {
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
+      } else if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(error.message);
       }
       throw new InternalServerErrorException();
     }
