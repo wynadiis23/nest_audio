@@ -93,6 +93,10 @@ export class AuthenticationService {
       // validate username and password
       const user = await this.userService.findOneByUsername(username);
 
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
       if (user.oauthId) {
         throw new BadRequestException(
           'User was registered with OAuth. Please login using available OAuth provider',
@@ -111,6 +115,8 @@ export class AuthenticationService {
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
+      } else if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(error.message);
       }
       throw new InternalServerErrorException();
     }
