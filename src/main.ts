@@ -9,6 +9,7 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { HttpExceptionFilter } from './common/exception/http-filter.exception';
 import helmet from 'helmet';
+import { LoggerInterceptor } from './common/interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,7 +40,10 @@ async function bootstrap() {
   // Public Folder
   app.use('/public', express.static(join(__dirname, '..', 'public')));
 
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector)),
+    new LoggerInterceptor(),
+  );
 
   const config = new DocumentBuilder()
     .addBearerAuth()
