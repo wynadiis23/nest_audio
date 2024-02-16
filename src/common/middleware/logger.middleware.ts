@@ -15,6 +15,8 @@ export class LoggerMiddleware implements NestMiddleware {
       const decodedRt = this.tokenService.decodeToken(accessToken);
 
       user = decodedRt.username;
+
+      req.user = decodedRt; // set user request for processed in logger interceptor
     }
 
     this.logger.log(`[${user}] accessing ${req.method} "${req.originalUrl}"`);

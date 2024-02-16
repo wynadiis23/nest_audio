@@ -48,14 +48,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       this.logger.log(`[${user}] ${errorName}`);
     } else {
-      this.logger.error(`[${user}] ${JSON.stringify(exception, null, 2)}`);
-
+      console.log(exception);
+      const errorName = (exception as any).name;
+      const message = (exception as any).message;
       httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
       responseBody = {
         messages: ['internal server error'],
         statusCode: httpStatus,
         error: 'Internal Server Error',
       };
+
+      this.logger.error(`[${user}] ${errorName} ${message}`);
     }
 
     httpAdapter.reply(response, responseBody, httpStatus);
