@@ -21,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { UserPlaylistService } from './user-playlist.service';
 import { AddUserPlaylistDto } from './dto';
-import { Public } from '../authentication/decorator';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 
@@ -32,7 +31,6 @@ export class UserPlaylistController {
   constructor(private readonly userPlaylistService: UserPlaylistService) {}
 
   @Post()
-  @Public()
   @ApiOperation({ summary: 'Add playlist to specified user' })
   @ApiBody({ type: AddUserPlaylistDto, required: true })
   async create(@Body(ValidationPipe) dto: AddUserPlaylistDto) {
@@ -138,7 +136,6 @@ export class UserPlaylistController {
   }
 
   @Get('/published')
-  @Public()
   @ApiQuery({
     name: 'filterBy',
     type: 'string',
@@ -230,7 +227,6 @@ export class UserPlaylistController {
   }
 
   @Delete()
-  @Public()
   @ApiOperation({
     summary: 'Remove user from specified playlist',
   })
@@ -265,7 +261,6 @@ export class UserPlaylistController {
 
   // get list of user that not yet added to given playlist
   @Get('/get/available-user')
-  @Public()
   @ApiOperation({
     summary: 'Get all user that not yet added to given playlist',
   })

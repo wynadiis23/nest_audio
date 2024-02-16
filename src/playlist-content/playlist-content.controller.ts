@@ -8,11 +8,16 @@ import {
 } from '@nestjs/common';
 import { PlaylistContentService } from './playlist-content.service';
 import { PlaylistContentDto } from './dto/playlist-content.dto';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from '../authentication/decorator';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Playlist Content')
-@Public()
+@ApiBearerAuth()
 @Controller('playlist-content')
 export class PlaylistContentController {
   constructor(

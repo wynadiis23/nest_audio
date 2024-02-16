@@ -33,7 +33,7 @@ export class LoggerInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap((data) => {
         const response = { statusCode, data };
-        console.log(response);
+        // console.log(response);
       }),
     );
   }
