@@ -36,6 +36,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 import { ConfigService } from '@nestjs/config';
+import { Public } from '../authentication/decorator';
 
 @ApiTags('Tracks')
 @ApiBearerAuth()
@@ -309,6 +310,7 @@ export class TracksController {
   }
 
   @Get('/stream/:id')
+  @Public()
   @ApiOperation({ summary: 'Stream track based on track id' })
   @ApiHeader({
     name: 'range',
