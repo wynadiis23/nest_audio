@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -11,16 +10,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticationService } from './authentication.service';
-import { SignInDto, SignUpDto } from './dto';
+import { GoogleLoginTokenDto, SignInDto, SignUpDto } from './dto';
 import { Response } from 'express';
-import {
-  GoogleOAuthGuard,
-  LocalAuthGuard,
-  RefreshTokenAuthGuard,
-  RolesGuard,
-} from './guard';
+import { LocalAuthGuard, RefreshTokenAuthGuard, RolesGuard } from './guard';
 import { GetAuthorizedUser, Public, Roles } from './decorator';
-import { AuthorizedUserType, googleOAuthType } from './types';
+import { AuthorizedUserType } from './types';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 import { ConfigService } from '@nestjs/config';
 import { RoleEnum } from '../user-role/enum';
@@ -145,27 +139,34 @@ export class AuthenticationController {
     };
   }
 
-  // OAuth
-  @Public()
-  @UseGuards(GoogleOAuthGuard)
-  @Get('/oauth/google')
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-  async googleAuth(@Req() req) {}
+  // // OAuth
+  // @Public()
+  // @UseGuards(GoogleOAuthGuard)
+  // @Get('/oauth/google')
+  // // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+  // async googleAuth(@Req() req) {}
 
-  @Public()
-  @UseGuards(GoogleOAuthGuard)
-  @Get('/oauth/google-redirect')
-  async googleRedirect(@Req() req, @Res() res: Response) {
-    const user = req.user as googleOAuthType;
+  // @Public()
+  // @UseGuards(GoogleOAuthGuard)
+  // @Get('/oauth/google-redirect')
+  // async googleRedirect(@Req() req, @Res() res: Response) {
+  //   const user = req.user as googleOAuthType;
 
-    // google auth
-    return await this.authenticationService.googleOAuth(user, res);
-  }
+  //   // google auth
+  //   return await this.authenticationService.googleOAuth(user, res);
+  // }
 
   // route for front end
   @Public()
+  @ApiBody({
+    type: GoogleLoginTokenDto,
+    required: true,
+  })
   @Post('oauth/google')
-  async googleFromFrontEnd(@Body('token') token: string) {
-    await this.authenticationService.googleOAuthFrontEnd(token);
+  async googleFromFrontEnd(
+    @Body() dto: GoogleLoginTokenDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authenticationService.googleOAuthFrontEnd(dto.token, res);
   }
 }

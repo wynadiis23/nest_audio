@@ -313,7 +313,7 @@ export class AuthenticationService {
     }
   }
 
-  async googleOAuthFrontEnd(token: string) {
+  async googleOAuthFrontEnd(token: string, res: Response) {
     try {
       const client = new OAuth2Client({
         clientId: this.appConfig.google.clientID,
@@ -321,23 +321,65 @@ export class AuthenticationService {
       });
       console.log(token);
 
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: this.appConfig.google.clientID,
-      });
+      const ticket = await client.getTokenInfo(token);
 
-      const userInformation = ticket.getPayload();
+      // validate email domain
+      const emailDomain = ticket.email
+        .substring(ticket.email.indexOf('@'), ticket.email.length)
+        .toLocaleLowerCase();
 
-      const googleOAuth: googleOAuthType = {
-        email: userInformation.email,
-        name: userInformation.name,
-        provider: 'google',
-        providerId: 'some-provider-id',
+      console.log(emailDomain);
+
+      if (emailDomain !== '@planetsurf.id') {
+        throw new UnauthorizedException('invalid email domain');
+      }
+
+      let user: User;
+      // check if email was registere or not
+      // if not register the user (SIGN UP)
+      // if yes generate token (SIGN IN)
+
+      user = await this.userService.findOneByEmail(ticket.email);
+
+      if (!user) {
+        user = await this.signUp({
+          email: ticket.email,
+          name: ticket.email,
+          username: ticket.email,
+          roles: [RoleEnum.GENERAL],
+          password: null,
+          oauthId: null,
+          oauthProvider: 'google',
+        });
+
+        console.log('sign up');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.username);
+      // save token
+      await this.tokenService.create(tokens.refreshToken, user.id, tokens.tf);
+
+      const payload = {
+        username: user.username,
+        roles: user.roles.map((role) => role.code),
+        accessToken: tokens.accessToken,
       };
 
-      return googleOAuth;
+      const generatedCookie = this.generateRefreshTokenCookie(
+        tokens.refreshToken,
+      );
+
+      res.cookie(
+        generatedCookie.key,
+        generatedCookie.refreshToken,
+        generatedCookie.options,
+      );
+
+      return payload;
     } catch (error) {
-      console.log(error);
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
