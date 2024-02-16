@@ -161,4 +161,11 @@ export class AuthenticationController {
     // google auth
     return await this.authenticationService.googleOAuth(user, res);
   }
+
+  // route for front end
+  @Public()
+  @Post('oauth/google')
+  async googleFromFrontEnd(@Body('token') token: string) {
+    await this.authenticationService.googleOAuthFrontEnd(token);
+  }
 }

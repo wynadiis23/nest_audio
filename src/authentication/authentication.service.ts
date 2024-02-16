@@ -18,6 +18,7 @@ import { v4 as uuid } from 'uuid';
 import { RoleEnum } from '../user-role/enum';
 import { User } from '../user/entity/user.entity';
 import { Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthenticationService {
@@ -308,6 +309,35 @@ export class AuthenticationService {
         data: payload,
       });
     } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async googleOAuthFrontEnd(token: string) {
+    try {
+      const client = new OAuth2Client({
+        clientId: this.appConfig.google.clientID,
+        clientSecret: this.appConfig.google.clientSecret,
+      });
+      console.log(token);
+
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: this.appConfig.google.clientID,
+      });
+
+      const userInformation = ticket.getPayload();
+
+      const googleOAuth: googleOAuthType = {
+        email: userInformation.email,
+        name: userInformation.name,
+        provider: 'google',
+        providerId: 'some-provider-id',
+      };
+
+      return googleOAuth;
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException();
     }
   }
