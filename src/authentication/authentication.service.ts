@@ -18,7 +18,6 @@ import { v4 as uuid } from 'uuid';
 import { RoleEnum } from '../user-role/enum';
 import { User } from '../user/entity/user.entity';
 import { Response } from 'express';
-import { UpdateLastAcivityUserColumnToUnique1705655694568 } from '../database/migrations/1705655694568-UpdateLastAcivityUserColumnToUnique';
 
 @Injectable()
 export class AuthenticationService {
@@ -98,7 +97,7 @@ export class AuthenticationService {
         throw new UnauthorizedException('User not found');
       }
 
-      if (user?.oauthId) {
+      if (user.oauthId) {
         throw new BadRequestException(
           'User was registered with OAuth. Please login using available OAuth provider',
         );
