@@ -21,7 +21,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { Public, Roles } from '../authentication/decorator';
+import { Roles } from '../authentication/decorator';
 import { UpdateUserDto } from './dto';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
@@ -35,7 +35,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Public()
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get list all user',
   })
@@ -141,7 +141,6 @@ export class UserController {
 
   // update user
   @Put(':id')
-  @Public()
   @ApiBody({ type: UpdateUserDto, required: true })
   @ApiOperation({ summary: 'Update user detail' })
   async update(

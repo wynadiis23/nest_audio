@@ -22,6 +22,7 @@ import { Response } from 'express';
 import MultipleTrackUploadFilesInterceptor from '../utils/multiple-track-upload-files.interceptor';
 import { TracksDto } from './dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiHeader,
@@ -32,13 +33,12 @@ import {
 } from '@nestjs/swagger';
 import { Observable, fromEvent, map } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Public } from '../authentication/decorator';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Tracks')
-@Public()
+@ApiBearerAuth()
 @Controller('tracks')
 export class TracksController {
   constructor(

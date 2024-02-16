@@ -11,9 +11,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { TracksMetadataService } from './tracks-metadata.service';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateMetadataDto, UploadMetadataImgDto } from './dto';
-import { Public } from '../authentication/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname, join } from 'path';
 import { diskStorage } from 'multer';
@@ -46,7 +51,7 @@ const imageFileFilter = (req, file, cb) => {
 };
 
 @ApiTags('Track Metadata')
-@Public()
+@ApiBearerAuth()
 @Controller('tracks-metadata')
 export class TracksMetadataController {
   constructor(private readonly tracksMetadataService: TracksMetadataService) {}

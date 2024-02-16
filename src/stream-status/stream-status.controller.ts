@@ -1,11 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { StreamStatusService } from './stream-status.service';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from '../authentication/decorator';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Stream Status')
-@Public()
+@ApiBearerAuth()
 @Controller('stream-status')
 export class StreamStatusController {
   constructor(

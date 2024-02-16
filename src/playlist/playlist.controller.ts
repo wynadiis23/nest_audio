@@ -15,6 +15,7 @@ import {
 import { PlaylistService } from './playlist.service';
 import { PlaylistDto } from './dto/playlist.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -23,12 +24,11 @@ import {
 } from '@nestjs/swagger';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { PublishedStatusEnum } from './enum';
-import { Public } from '../authentication/decorator';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 
 @ApiTags('Playlist')
-@Public()
+@ApiBearerAuth()
 @Controller('playlist')
 export class PlaylistController {
   constructor(private readonly playlistService: PlaylistService) {}
