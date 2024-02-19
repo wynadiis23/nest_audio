@@ -21,6 +21,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
+    console.log('ASUUUU');
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
     const request = ctx.getRequest();
@@ -48,6 +49,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       this.logger.log(`[${user}] ${errorName}`);
     } else {
+      console.log('ASUUUU');
       console.log(exception);
       const errorName = (exception as any).name;
       const message = (exception as any).message;

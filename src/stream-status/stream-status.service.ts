@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LastActivity } from '../last-activity/entity/last-activity.entity';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { UpdateLastActivityDBDto } from './dto';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { getCurrentDate } from '../utils';
@@ -24,10 +24,29 @@ export class StreamStatusService {
 
   async updateLastActivityDB(payload: UpdateLastActivityDBDto) {
     try {
-      return await this.lastActivityRepository.upsert(
-        { user: payload.user, lastActivityTime: payload.lastActivityTime },
-        ['user'],
-      );
+      const lastActivity = await this.lastActivityRepository.findOne({
+        where: {
+          user: payload.user,
+        },
+      });
+
+      // if current user already has client key, then do not set the client key again
+      if (lastActivity.clientKey) {
+        payload.clientKey = null;
+      }
+
+      const deepPartialLastActivity: DeepPartial<LastActivity> = {
+        user: payload.user,
+        lastActivityTime: payload.lastActivityTime,
+      };
+
+      if (payload.clientKey) {
+        deepPartialLastActivity.clientKey = payload.clientKey;
+      }
+
+      return await this.lastActivityRepository.upsert(deepPartialLastActivity, [
+        'user',
+      ]);
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -54,19 +73,37 @@ export class StreamStatusService {
       const lastActivityCache: streamStatusType[] =
         await this.redisCacheService.getStreamStatusCache(key);
 
+      let clientKeyMessage: string;
+
       const activity = lastActivityDB.map((db): streamStatusType => {
         const matchCached = lastActivityCache.find(
           (cache) => db.user === cache.name,
         );
 
+        if (matchCached?.clientKey) {
+          clientKeyMessage =
+            matchCached.clientKey == db.clientKey
+              ? 'match client key'
+              : 'different client key';
+        } else {
+          clientKeyMessage = 'no client key was provided by the client';
+        }
+
         return {
           id: db.id,
           name: db.user,
           status: matchCached ? matchCached.status : 'offline',
-          trackName: matchCached ? matchCached.trackName : null,
-          album: matchCached ? matchCached.album || null : null,
-          artist: matchCached ? matchCached.artist || null : null,
+          trackName: matchCached
+            ? matchCached.trackName
+            : 'no track name provided by the client',
+          album: matchCached
+            ? matchCached.album
+            : 'no track album provided by the client',
+          artist: matchCached
+            ? matchCached.artist
+            : 'no track artist provided by the client',
           lastActivity: dayjs(db.lastActivityTime).format(),
+          clientKeyStatus: clientKeyMessage,
           ...matchCached,
         };
       });
@@ -98,6 +135,7 @@ export class StreamStatusService {
         album: message.album,
         artist: message.artist,
         lastActivity,
+        clientKey: message.clientKey,
         ...message,
       };
       const date = getCurrentDate();
@@ -108,6 +146,7 @@ export class StreamStatusService {
       await this.updateLastActivityDB({
         lastActivityTime: new Date(lastActivity),
         user: user.name,
+        clientKey: message.clientKey,
       });
     } catch (error) {
       throw new InternalServerErrorException();

@@ -5,4 +5,5 @@ export type updateStreamStatusMessageType = {
   trackName: string;
   artist?: string;
   album?: string;
+  clientKey?: string;
 };
