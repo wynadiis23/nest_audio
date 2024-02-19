@@ -23,10 +23,7 @@ export const WSAuthMiddleware = (
         });
       }
     } catch (error) {
-      next({
-        name: 'Unauthorized',
-        message: 'Unauthorized',
-      });
+      next({ name: 'asuuu', message: 'asuuu' });
     }
   };
 };

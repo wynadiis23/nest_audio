@@ -29,6 +29,7 @@ import {
   UPDATE_STREAM_STATUS_EVENT_CONST,
 } from './const';
 import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
+import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -40,7 +41,7 @@ import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 })
 @UseGuards(WsJwtAuthGuard)
 @Injectable()
-export class EventGatewayGateway {
+export class EventGatewayGateway implements NestGateway {
   constructor(
     private readonly streamStatusService: StreamStatusService,
     private readonly eventGatewayConfigService: EventGatewayConfigService,
@@ -69,13 +70,14 @@ export class EventGatewayGateway {
   ): Promise<void> {
     // set user in redis
     const authUser = client.handshake.auth.user as WSAuthType;
+    // do we really need to set user every user send a message?
     await this.redisCacheService.set(
       `ws_user_${client.id}`,
       {
         id: client.id,
         username: authUser.username,
       },
-      0,
+      360,
     );
 
     // get auth user from client
@@ -98,7 +100,7 @@ export class EventGatewayGateway {
         id: client.id,
         username: connectedUser.username,
       },
-      0,
+      360,
     );
   }
 

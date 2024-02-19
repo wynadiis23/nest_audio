@@ -31,6 +31,7 @@ export class EventGatewayConfigService {
 
       return user;
     } catch (error) {
+      console.log(error);
       throw new WsException(error.message);
     }
   }

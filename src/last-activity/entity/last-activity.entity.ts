@@ -9,4 +9,12 @@ export class LastActivity extends SharedEntity {
 
   @Column({ name: 'last_activity_time' })
   lastActivityTime: Date;
+
+  @Column({
+    name: 'client_key',
+    nullable: true,
+    comment:
+      'client key taken from activation key of iReap to keep uniqueness for each client',
+  })
+  clientKey: string;
 }
