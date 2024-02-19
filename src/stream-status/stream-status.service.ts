@@ -31,7 +31,7 @@ export class StreamStatusService {
       });
 
       // if current user already has client key, then do not set the client key again
-      if (lastActivity.clientKey) {
+      if (lastActivity?.clientKey) {
         payload.clientKey = null;
       }
 
