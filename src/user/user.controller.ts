@@ -173,4 +173,14 @@ export class UserController {
       message: 'successfully remove user',
     };
   }
+
+  @Get('user-roles')
+  @ApiBearerAuth()
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Get user roles' })
+  async userRoles() {
+    const roles = Object.values(RoleEnum);
+    return roles;
+  }
 }
