@@ -12,7 +12,7 @@ export const WSAuthMiddleware = (
     try {
       const token =
         client.handshake.auth.token || client.handshake.headers.token;
-      const user = await eventGatewayConfigService.isValidAuthHeader(token);
+      const user = eventGatewayConfigService.isValidAuthHeader(token);
       if (user) {
         client.handshake.auth.user = user;
         next();
@@ -23,7 +23,7 @@ export const WSAuthMiddleware = (
         });
       }
     } catch (error) {
-      next({ name: 'asuuu', message: 'asuuu' });
+      next({ name: 'Unauthorized', message: 'Unauthorized' });
     }
   };
 };

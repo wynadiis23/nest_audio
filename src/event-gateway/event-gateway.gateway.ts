@@ -58,6 +58,7 @@ export class EventGatewayGateway implements NestGateway {
 
   afterInit(server: Server) {
     const middleware = WSAuthMiddleware(this.eventGatewayConfigService);
+    console.log(`${EventGatewayGateway.name} initializing`);
     server.use(middleware);
   }
 
