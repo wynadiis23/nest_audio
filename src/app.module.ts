@@ -5,10 +5,11 @@ import { TracksModule } from './tracks/tracks.module';
 import {
   appConfiguration,
   dsConfiguration,
+  loggerConfiguration,
   redisConfiguration,
   schemaValidation,
 } from './configs';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { PlaylistModule } from './playlist/playlist.module';
@@ -37,6 +38,11 @@ import { UserPlaylistModule } from './user-playlist/user-playlist.module';
 import { EventGatewayModule } from './event-gateway/event-gateway.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { GoogleOAuthStrategy } from './authentication/strategy/google-oauth.strategy';
+import { LoggerModule } from 'nestjs-pino';
+import { pino, TransportTargetOptions } from 'pino';
+import { KEY_REFRESH_TOKEN_COOKIE } from './authentication/const';
+import { tokenPayload } from './authentication/types';
+import { Request } from 'express';
 
 @Module({
   imports: [
@@ -47,7 +53,12 @@ import { GoogleOAuthStrategy } from './authentication/strategy/google-oauth.stra
         `${process.cwd()}/src/configs/env/.env.app`,
         `${process.cwd()}/src/configs/env/.env.redis`,
       ],
-      load: [dsConfiguration, appConfiguration, redisConfiguration],
+      load: [
+        dsConfiguration,
+        appConfiguration,
+        redisConfiguration,
+        loggerConfiguration,
+      ],
       validationSchema: schemaValidation,
       cache: true,
     }),
@@ -57,6 +68,106 @@ import { GoogleOAuthStrategy } from './authentication/strategy/google-oauth.stra
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..'),
     // }),
+    LoggerModule.forRootAsync({
+      inject: [loggerConfiguration.KEY, appConfiguration.KEY],
+      useFactory: async (
+        conf: ConfigType<typeof loggerConfiguration>,
+        appConf: ConfigType<typeof appConfiguration>,
+      ) => {
+        return {
+          pinoHttp: {
+            serializers: {
+              req: (req) => {
+                let username: string | undefined;
+
+                // find username in rt
+                const rtCookie: string | undefined = req?.headers.cookie
+                  ?.split(';')
+                  .find((c: string) => c.startsWith(KEY_REFRESH_TOKEN_COOKIE));
+
+                if (!username && rtCookie) {
+                  const rt = rtCookie.split('=')[1];
+                  try {
+                    const claims = rt.split('.')[1];
+                    const parsed = JSON.parse(
+                      Buffer.from(claims, 'base64').toString('utf-8'),
+                    ) as tokenPayload;
+                    username = parsed.username;
+                  } catch (error) {}
+                }
+
+                // fallback to use access token
+                const accessToken: string | undefined =
+                  req?.headers.authorization;
+                if (!username && accessToken) {
+                  try {
+                    const claims = accessToken.split('.')[1];
+                    const parsed = JSON.parse(
+                      Buffer.from(claims, 'base64').toString('utf-8'),
+                    ) as tokenPayload;
+                    username = parsed.username;
+                  } catch (error) {}
+                }
+
+                // Fallback to handling individual cases
+                const res = {
+                  ...req,
+                  _added: {
+                    username,
+                  },
+                  headers: {
+                    ...req.headers,
+                    authorization: req.headers.authorization
+                      ? '[REDACTED]'
+                      : undefined,
+                    cookie: req.headers.cookie ? '[REDACTED]' : undefined,
+                  },
+                } satisfies Request;
+
+                return res;
+              },
+            },
+            logger: pino(
+              {
+                level: 'trace',
+                redact: {
+                  paths: [`res.headers['set-cookie']`],
+                  censor: '[REDACTED]',
+                },
+              },
+              pino.transport({
+                targets: [
+                  ...(appConf.nodeEnv === 'development'
+                    ? [
+                        {
+                          target: 'pino-pretty',
+                          level: 'trace',
+                          options: {
+                            colorize: true,
+                          },
+                        } satisfies TransportTargetOptions,
+                      ]
+                    : []),
+
+                  ...(conf.logger_mongo
+                    ? [
+                        {
+                          target: 'pino-mongodb',
+                          level: 'trace',
+                          options: {
+                            uri: conf.mongo_uri,
+                            collection: conf.mongo_coll,
+                          },
+                        } satisfies TransportTargetOptions,
+                      ]
+                    : []),
+                ],
+              }),
+            ),
+          },
+        };
+      },
+    }),
     EventEmitterModule.forRoot(),
     TracksModule,
     PlaylistModule,

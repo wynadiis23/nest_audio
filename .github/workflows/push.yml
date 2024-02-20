@@ -11,6 +11,8 @@ jobs:
       - name: setup variables
         run: |
           touch .env
+          echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
+
           echo APP_PORT=${{ secrets.APP_PORT }} >> .env
           echo APP_FRONT_END_DOMAIN=${{ secrets.APP_FRONT_END_DOMAIN }} >> .env
           echo APP_TRACK_UPLOAD_LIMIT=${{ secrets.APP_TRACK_UPLOAD_LIMIT }} >> .env
@@ -21,15 +23,22 @@ jobs:
           echo APP_COOKIE_DOMAIN=${{ secrets.APP_COOKIE_DOMAIN }} >> .env
           echo APP_TRACK_FOLDER=${{ secrets.APP_TRACK_FOLDER }} >> .env
           echo APP_TRACK_MINIMUM_BIT_RATE=${{ secrets.APP_TRACK_MINIMUM_BIT_RATE }} >> .env
+
+          echo LOG_MONGO=${{ secrets.LOG_MONGO }} >> .env
+          echo LOG_MONGO_COLLECTION=${{ secrets.LOG_MONGO_COLLECTION }} >> .env
+          echo LOG_MONGO_URI=${{ secrets.LOG_MONGO_URI }} >> .env
+
           echo OAUTH_GOOGLE_ID=${{ secrets.OAUTH_GOOGLE_ID }} >> .env
           echo OAUTH_GOOGLE_SECRET=${{ secrets.OAUTH_GOOGLE_SECRET }} >> .env
           echo OAUTH_GOOGLE_CALLBACK_URL=${{ secrets.OAUTH_GOOGLE_CALLBACK_URL }} >> .env
+
           echo DS_HOST=${{ secrets.DS_HOST }} >> .env
           echo DS_PORT=${{ secrets.DS_PORT }} >> .env
           echo DS_USERNAME=${{ secrets.DS_USERNAME }} >> .env
           echo DS_PASSWORD=${{ secrets.DS_PASSWORD }} >> .env
           echo DS_NAME=${{ secrets.DS_NAME }} >> .env
           echo DS_SYNCHRONIZE=${{ secrets.DS_SYNCHRONIZE }} >> .env
+
           echo REDIS_HOST=${{ secrets.REDIS_HOST }} >> .env
           echo REDIS_PORT=${{ secrets.REDIS_PORT }} >> .env
           echo REDIS_TTL=${{ secrets.REDIS_TTL }} >> .env
