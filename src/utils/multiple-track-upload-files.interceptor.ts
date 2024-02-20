@@ -73,6 +73,7 @@ function MultipleTrackUploadFilesInterceptor(
         fileFilter: trackFilter,
         limits: {
           files: +trackUploadLimit,
+          // fileSize: 10485760, // 10 Mb allowed
         },
       };
 

@@ -2,6 +2,8 @@ import * as Joi from 'joi';
 
 export const schemaValidation = Joi.object({
   // APP Configuration
+  NODE_ENV: Joi.string().required(),
+
   APP_PORT: Joi.string().required().default(3000),
   APP_FRONT_END_DOMAIN: Joi.string().required(),
   APP_TRACK_UPLOAD_LIMIT: Joi.number().required().default(10),
@@ -17,6 +19,11 @@ export const schemaValidation = Joi.object({
   OAUTH_GOOGLE_ID: Joi.string().required(),
   OAUTH_GOOGLE_SECRET: Joi.string().required(),
   OAUTH_GOOGLE_CALLBACK_URL: Joi.string().required(),
+
+  // Logger
+  LOG_MONGO: Joi.boolean().required(),
+  LOG_MONGO_COLLECTION: Joi.string().required(),
+  LOG_MONGO_URI: Joi.string().required(),
 
   // Database Configuration
   DS_HOST: Joi.string().required(),
