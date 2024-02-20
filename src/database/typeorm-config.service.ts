@@ -22,7 +22,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       entities: [path.join(__dirname, '/../**/*.entity{.ts,.js}')],
       // autoLoadEntities: true,
       synchronize: this.dsConfig.synchronize,
-      // logging: process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV !== 'production',
       // retryAttempts: 10,
       // retryDelay: 3000,
       // migrations: [path.join(__dirname, '/migrations/**/*{.ts,.js}')],
