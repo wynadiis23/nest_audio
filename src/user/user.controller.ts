@@ -141,6 +141,9 @@ export class UserController {
 
   // update user
   @Put(':id')
+  @ApiBearerAuth()
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
   @ApiBody({ type: UpdateUserDto, required: true })
   @ApiOperation({ summary: 'Update user detail' })
   async update(
