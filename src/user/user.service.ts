@@ -5,13 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Not, Repository } from 'typeorm';
 import { UserRole } from '../user-role/entity/user-role.entity';
 import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { UpdateUserDto } from './dto';
 import { IDataTable } from '../common/interface';
-import { selectQuery } from '../common/query-builder';
 
 @Injectable()
 export class UserService {
@@ -141,6 +140,19 @@ export class UserService {
     try {
       if (id !== payload.id) {
         throw new BadRequestException('invalid user id');
+      }
+
+      // validate name
+      const isExist = await this.userRepository.findOne({
+        where: {
+          name: payload.name,
+          id: Not(payload.id),
+        },
+      });
+
+      if (isExist) {
+        console.log(isExist);
+        throw new BadRequestException('User with this name already exist.');
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

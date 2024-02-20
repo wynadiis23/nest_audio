@@ -1,9 +1,33 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { SignUpDto } from '../../authentication/dto';
-import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+} from 'class-validator';
 import { IsActiveEnum } from '../enum';
+import { Transform } from 'class-transformer';
 
-export class UpdateUserDto extends PartialType(SignUpDto) {
+export class UpdateUserDto extends PartialType(
+  OmitType(SignUpDto, ['email', 'username'] as const),
+) {
+  @ApiProperty({
+    name: 'name',
+    type: 'string',
+    maxLength: 128,
+    required: true,
+    description: 'Name of the user',
+    example: 'PS ARTO',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(4, 128)
+  @Transform(({ value }) => value.toString().trim().toUpperCase())
+  name: string;
+
   @ApiProperty({
     name: 'isActive',
     enum: IsActiveEnum,
