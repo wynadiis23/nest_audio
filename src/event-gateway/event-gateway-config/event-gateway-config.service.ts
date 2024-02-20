@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
@@ -14,7 +14,7 @@ export class EventGatewayConfigService {
   isValidAuthHeader(authorization: string, client?: Socket) {
     try {
       if (!authorization) {
-        throw new WsException('no token was provided');
+        throw new JsonWebTokenError('no token was provided');
       }
 
       const token = authorization.split(' ');
@@ -31,6 +31,9 @@ export class EventGatewayConfigService {
 
       return user;
     } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        throw new UnauthorizedException(error.message);
+      }
       throw new WsException(error.message);
     }
   }

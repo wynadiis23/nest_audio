@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io';
 import { EventGatewayConfigService } from '../event-gateway-config/event-gateway-config.service';
+import { UnauthorizedException } from '@nestjs/common';
 
 export type SocketMiddleware = (
   socket: Socket,
@@ -23,7 +24,14 @@ export const WSAuthMiddleware = (
         });
       }
     } catch (error) {
-      next({ name: 'Unauthorized', message: 'Unauthorized' });
+      if (error instanceof UnauthorizedException) {
+        next({
+          name: 'Unauthorized',
+          message: 'Unauthorized',
+        });
+      } else {
+        next({ name: error.name, message: error.message });
+      }
     }
   };
 };
