@@ -104,6 +104,7 @@ export class StreamStatusService {
             : 'no track artist provided by the client',
           lastActivity: dayjs(db.lastActivityTime).format(),
           clientKeyStatus: clientKeyMessage,
+          clientKey: matchCached ? matchCached.clientKey : null,
           ...matchCached,
         };
       });
