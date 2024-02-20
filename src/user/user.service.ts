@@ -46,16 +46,13 @@ export class UserService {
 
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy == 'name') {
-          dataTableOptions.filterValue =
-            dataTableOptions.filterValue.toUpperCase();
+          query = query.andWhere(
+            `LOWER(user.name) LIKE '%' || :filterValue || '%'`,
+            {
+              filterValue: dataTableOptions.filterValue.toLowerCase(),
+            },
+          );
         }
-        query = selectQuery(
-          query,
-          entity,
-          dataTableOptions.filterOperator,
-          dataTableOptions.filterBy,
-          dataTableOptions.filterValue,
-        );
       }
 
       const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
