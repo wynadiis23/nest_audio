@@ -100,6 +100,36 @@ export class UserService {
     }
   }
 
+  async detail(id: string) {
+    try {
+      const query = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoin(
+          UserPlaylist,
+          'user_playlist',
+          'user_playlist.userId = user.id',
+        )
+        .leftJoinAndMapMany(
+          'user.roles',
+          UserRole,
+          'user_role',
+          'user_role.userId = user.id',
+        )
+        .leftJoinAndMapMany(
+          'user.playlist',
+          Playlist,
+          'playlist',
+          'user_playlist.playlistId = playlist.id',
+        )
+        .where('user.id = :userId', { userId: id });
+
+      return query.getOne();
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
   async findOneByUsername(username: string) {
     try {
       return await this.userRepository.findOne({
