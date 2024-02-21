@@ -25,6 +25,7 @@ import { UpdatePlaylistEvent } from '../playlist/events';
 import { EventGatewayConfigService } from './event-gateway-config/event-gateway-config.service';
 import {
   SUBS_UPDATE_STREAM_STATUS,
+  SUBS_UPDATE_USER_STATUS,
   UPDATE_PLAYLIST_EVENT_CONST,
   UPDATE_STREAM_STATUS_EVENT_CONST,
 } from './const';
@@ -62,6 +63,24 @@ export class EventGatewayGateway implements NestGateway {
     server.use(middleware);
   }
 
+  // subscribe incoming message of user status
+  @SubscribeMessage(SUBS_UPDATE_USER_STATUS)
+  async handleUserStatus(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() message: any,
+  ) {
+    const authUser = client.handshake.auth.user as WSAuthType;
+
+    await this.redisCacheService.set(
+      `ws_user_${authUser.username}`,
+      {
+        id: client.id,
+        username: authUser.username,
+      },
+      360,
+    );
+  }
+
   // subscribe incoming message from web socket client
   @SubscribeMessage(SUBS_UPDATE_STREAM_STATUS)
   async handleMessageStreamStatus(
@@ -73,7 +92,7 @@ export class EventGatewayGateway implements NestGateway {
     const authUser = client.handshake.auth.user as WSAuthType;
     // do we really need to set user every user send a message?
     await this.redisCacheService.set(
-      `ws_user_${client.id}`,
+      `ws_user_${authUser.username}`,
       {
         id: client.id,
         username: authUser.username,
@@ -82,13 +101,10 @@ export class EventGatewayGateway implements NestGateway {
     );
 
     // get auth user from client
-    message.id = authUser.sub;
+    message.userId = authUser.sub;
 
     await this.streamStatusService.updateStreamStatus(message);
     await this.streamStatusService.getStreamStatus();
-
-    // return back response to sender
-    client.emit(UPDATE_STREAM_STATUS_EVENT_CONST, 'successfully transmitted');
   }
 
   async handleConnection(client: Socket) {
@@ -96,7 +112,7 @@ export class EventGatewayGateway implements NestGateway {
     console.log('client connect', client.id, connectedUser.username);
 
     await this.redisCacheService.set(
-      `ws_user_${client.id}`,
+      `ws_user_${connectedUser.username}`,
       {
         id: client.id,
         username: connectedUser.username,

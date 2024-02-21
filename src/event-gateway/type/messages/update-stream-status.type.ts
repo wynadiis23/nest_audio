@@ -1,5 +1,5 @@
 export type updateStreamStatusMessageType = {
-  id: string;
+  userId: string;
   name: string;
   status: string;
   trackName: string;

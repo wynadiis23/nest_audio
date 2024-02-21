@@ -1,5 +1,5 @@
 export class UpdateLastActivityDBDto {
-  user: string;
+  userId: string;
   lastActivityTime: Date;
   clientKey?: string;
 }

@@ -1,7 +1,21 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Controller,
+  DefaultValuePipe,
+  Get,
+  ParseEnumPipe,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
 import { StreamStatusService } from './stream-status.service';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { OperatorEnum, SortEnum } from '../common/enum';
+import { IDataTable } from '../common/interface';
 
 @ApiTags('Stream Status')
 @ApiBearerAuth()
@@ -39,10 +53,102 @@ export class StreamStatusController {
   // }
 
   @Get('/stream-status')
+  @ApiQuery({
+    name: 'status',
+    type: 'string',
+    required: false,
+    description: 'Client stream status',
+    example: 'online',
+  })
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'user',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'ARTO',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    type: 'string',
+    required: false,
+    description: 'Sort by property',
+    example: 'user',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    type: 'string',
+    enum: SortEnum,
+    required: false,
+    description: 'Sort order',
+    example: 'ASC',
+  })
+  @ApiQuery({
+    name: 'pageIndex',
+    type: 'number',
+    required: false,
+    description: 'Page index',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: 'number',
+    required: false,
+    description: 'Page size',
+    example: 20,
+  })
   @ApiOperation({
     summary: 'Get user activity stream status',
   })
-  async streamStatus() {
-    return await this.streamStatusService.getStreamStatus();
+  async streamStatus(
+    @Query('status', new DefaultValuePipe('online')) status: string,
+    @Query('filterBy', new DefaultValuePipe('user')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
+    @Query('sortBy', new DefaultValuePipe('user')) sortBy: string,
+    @Query(
+      'sortOrder',
+      new DefaultValuePipe(SortEnum.ASC),
+      new ParseEnumPipe(SortEnum),
+    )
+    sortOrder: SortEnum,
+    @Query('pageIndex', new DefaultValuePipe(0), ParseIntPipe)
+    pageIndex: number,
+    @Query('pageSize', new DefaultValuePipe(0), ParseIntPipe)
+    pageSize: number,
+  ) {
+    const dataTablePayload: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+      sortBy,
+      sortOrder,
+      pageIndex,
+      pageSize,
+    };
+
+    return await this.streamStatusService.getStreamStatus(
+      dataTablePayload,
+      status,
+    );
   }
 }
