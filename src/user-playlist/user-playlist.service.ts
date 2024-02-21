@@ -319,18 +319,16 @@ export class UserPlaylistService {
         .select('playlist.id', 'id')
         .addSelect('playlist.name', 'name');
 
-      if (!addedPlaylistUser.length) {
-        return await notYetAddedPlaylist.getRawMany();
+      if (addedPlaylistUser.length) {
+        notYetAddedPlaylist = notYetAddedPlaylist.where(
+          'playlist.id NOT IN (:...playlistId)',
+          {
+            playlistId: addedPlaylistUser.map(
+              (userPlaylist) => userPlaylist.playlistId,
+            ),
+          },
+        );
       }
-
-      notYetAddedPlaylist = notYetAddedPlaylist.where(
-        'playlist.id NOT IN (:...playlistId)',
-        {
-          playlistId: addedPlaylistUser.map(
-            (userPlaylist) => userPlaylist.playlistId,
-          ),
-        },
-      );
 
       if (dataTableOptions.filterBy) {
         notYetAddedPlaylist = notYetAddedPlaylist
