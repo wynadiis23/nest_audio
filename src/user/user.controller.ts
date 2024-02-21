@@ -139,6 +139,13 @@ export class UserController {
     return await this.userService.list(parseInt(isActive), dataTableOptions);
   }
 
+  @Get(':id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get detail of user' })
+  async detail(@Param('id') id: string) {
+    return await this.userService.detail(id);
+  }
+
   // update user
   @Put(':id')
   @ApiBearerAuth()
