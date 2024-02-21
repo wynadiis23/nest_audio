@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LastActivity } from '../last-activity/entity/last-activity.entity';
-import { DeepPartial, QueryResult, Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { UpdateLastActivityDBDto } from './dto';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { getCurrentDate } from '../utils';
@@ -14,6 +14,7 @@ import { UserService } from '../user/user.service';
 import { IDataTable } from '../common/interface';
 import { userConnectionType } from './type/user-connection.type';
 import { User } from '../user/entity/user.entity';
+import { UserStatusEnum } from './enum';
 
 @Injectable()
 export class StreamStatusService {
@@ -170,7 +171,10 @@ export class StreamStatusService {
     return activity;
   }
 
-  async getStreamStatus(dataTableOptions?: IDataTable, status?: string) {
+  async getStreamStatus(
+    dataTableOptions?: IDataTable,
+    userStatus?: UserStatusEnum,
+  ) {
     try {
       const date = getCurrentDate();
       const key = `${date}*`;
@@ -207,8 +211,8 @@ export class StreamStatusService {
       );
 
       // filter by stream status
-      if (status) {
-        activity = activity.filter((act) => act.userStatus === status);
+      if (userStatus) {
+        activity = activity.filter((act) => act.userStatus === userStatus);
       }
 
       // send event to trigger websocket
@@ -234,8 +238,6 @@ export class StreamStatusService {
       }
 
       const streamStatus: streamStatusType = {
-        userId: message.userId,
-        username: user.username,
         name: user.name,
         status: message.status,
         trackName: message.trackName,
@@ -243,7 +245,6 @@ export class StreamStatusService {
         artist: message.artist,
         lastActivityTime: lastActivity,
         clientKey: message.clientKey,
-        ...message,
       };
       const date = getCurrentDate();
 

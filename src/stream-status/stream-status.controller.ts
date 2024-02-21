@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
+import { UserStatusEnum } from './enum';
 
 @ApiTags('Stream Status')
 @ApiBearerAuth()
@@ -54,11 +55,12 @@ export class StreamStatusController {
 
   @Get('/stream-status')
   @ApiQuery({
-    name: 'status',
+    name: 'userStatus',
     type: 'string',
+    enum: UserStatusEnum,
     required: false,
-    description: 'Client stream status',
-    example: 'online',
+    description: 'User status',
+    example: UserStatusEnum.ONLINE,
   })
   @ApiQuery({
     name: 'filterBy',
@@ -115,7 +117,8 @@ export class StreamStatusController {
     summary: 'Get user activity stream status',
   })
   async streamStatus(
-    @Query('status', new DefaultValuePipe('online')) status: string,
+    @Query('userStatus', new DefaultValuePipe(''))
+    userStatus: UserStatusEnum,
     @Query('filterBy', new DefaultValuePipe('user')) filterBy: string,
     @Query(
       'filterOperator',
@@ -148,7 +151,7 @@ export class StreamStatusController {
 
     return await this.streamStatusService.getStreamStatus(
       dataTablePayload,
-      status,
+      userStatus,
     );
   }
 }
