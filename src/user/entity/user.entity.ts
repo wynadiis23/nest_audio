@@ -5,6 +5,7 @@ import {
   Column,
   Entity,
   OneToMany,
+  OneToOne,
   Unique,
 } from 'typeorm';
 import { SharedEntity } from '../../common/entity/shared.entity';
@@ -13,6 +14,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { Token } from '../../token/entity/token.entity';
 import { UserRole } from '../../user-role/entity/user-role.entity';
 import { UserPlaylist } from '../../user-playlist/entity/user-playlist.entity';
+import { LastActivity } from '../../last-activity/entity/last-activity.entity';
 
 @Entity({ name: 'user' })
 @Unique(['username', 'email'])
@@ -52,6 +54,11 @@ export class User extends SharedEntity {
 
   @OneToMany(() => UserPlaylist, (userPlaylist) => userPlaylist.user)
   userPlaylists: UserPlaylist[];
+
+  @OneToOne(() => LastActivity, (lastActivity) => lastActivity.user, {
+    cascade: true,
+  })
+  lastActivity: LastActivity;
 
   @BeforeInsert()
   @BeforeUpdate()

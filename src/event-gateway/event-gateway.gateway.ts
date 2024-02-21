@@ -101,7 +101,7 @@ export class EventGatewayGateway implements NestGateway {
     );
 
     // get auth user from client
-    message.id = authUser.sub;
+    message.userId = authUser.sub;
 
     await this.streamStatusService.updateStreamStatus(message);
     await this.streamStatusService.getStreamStatus();

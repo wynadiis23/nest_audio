@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LastActivity } from '../last-activity/entity/last-activity.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, QueryResult, Repository } from 'typeorm';
 import { UpdateLastActivityDBDto } from './dto';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { getCurrentDate } from '../utils';
@@ -12,6 +12,8 @@ import { UPDATE_STREAM_STATUS_EVENT_CONST } from '../event-gateway/const';
 import { updateStreamStatusMessageType } from '../event-gateway/type';
 import { UserService } from '../user/user.service';
 import { IDataTable } from '../common/interface';
+import { userConnectionType } from './type/user-connection.type';
+import { User } from '../user/entity/user.entity';
 
 @Injectable()
 export class StreamStatusService {
@@ -25,37 +27,50 @@ export class StreamStatusService {
 
   async updateLastActivityDB(payload: UpdateLastActivityDBDto) {
     try {
+      let deepPartialLastActivity: DeepPartial<LastActivity>;
+
       const lastActivity = await this.lastActivityRepository.findOne({
         where: {
-          user: payload.user,
+          userId: payload.userId,
         },
       });
+
+      if (lastActivity) {
+        deepPartialLastActivity = {
+          id: lastActivity.id,
+          lastActivityTime: payload.lastActivityTime,
+          userId: payload.userId,
+        };
+      } else {
+        deepPartialLastActivity = {
+          lastActivityTime: payload.lastActivityTime,
+          userId: payload.userId,
+        };
+      }
 
       // if current user already has client key, then do not set the client key again
       if (lastActivity?.clientKey) {
         payload.clientKey = null;
       }
 
-      const deepPartialLastActivity: DeepPartial<LastActivity> = {
-        user: payload.user,
-        lastActivityTime: payload.lastActivityTime,
-      };
-
       if (payload.clientKey) {
         deepPartialLastActivity.clientKey = payload.clientKey;
       }
 
-      return await this.lastActivityRepository.upsert(deepPartialLastActivity, [
-        'user',
-      ]);
+      return await this.lastActivityRepository.save(deepPartialLastActivity);
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException();
     }
   }
 
   async getAllLastActivityFromDB() {
     try {
-      return await this.lastActivityRepository.find();
+      return await this.lastActivityRepository.find({
+        relations: {
+          user: true,
+        },
+      });
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -67,10 +82,17 @@ export class StreamStatusService {
       let query =
         this.lastActivityRepository.createQueryBuilder('last_activity');
 
+      query = query.leftJoinAndMapOne(
+        'last_activity.user',
+        User,
+        'user',
+        'last_activity.user_id = user.id',
+      );
+
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy === 'user') {
           query = query.where(
-            `LOWER(last_activity.user) LIKE '%' || :filterValue || '%'`,
+            `LOWER(user.name) LIKE '%' || :filterValue || '%'`,
             { filterValue: dataTableOptions.filterValue.toLowerCase() },
           );
         }
@@ -99,6 +121,7 @@ export class StreamStatusService {
   constructUserActivity(
     lastActivityDB: LastActivity[],
     lastActivityCache: streamStatusType[],
+    userConnections: userConnectionType[],
   ) {
     // also get last activity to db
     // compare it with status from cache, if user not found in cache, use last activity from db
@@ -107,10 +130,10 @@ export class StreamStatusService {
 
     const activity = lastActivityDB.map((db): streamStatusType => {
       const matchCached = lastActivityCache.find(
-        (cache) => db.user === cache.name,
+        (cache) => db.user.name === cache.name,
       );
 
-      if (matchCached?.clientKey) {
+      if (matchCached) {
         clientKeyMessage =
           matchCached.clientKey == db.clientKey
             ? 'match client key'
@@ -120,8 +143,12 @@ export class StreamStatusService {
       }
 
       return {
-        id: db.id,
-        name: db.user,
+        name: db.user.name,
+        userStatus: userConnections.find(
+          (userCon) => userCon.user === db.user.username,
+        )
+          ? 'online'
+          : 'offline',
         status: matchCached ? matchCached.status : 'offline',
         trackName: matchCached
           ? matchCached.trackName
@@ -162,18 +189,26 @@ export class StreamStatusService {
 
       // get user status
       // get user status from cache
-      const userConnections =
-        await this.redisCacheService.getWebSocketConnections('ws_user');
-      console.log(userConnections);
+      const connections = await this.redisCacheService.getWebSocketConnections(
+        'ws_user',
+      );
+
+      const userConnections = connections.map(
+        (connection): userConnectionType => ({
+          wsId: connection.id as string,
+          user: connection.username as string,
+        }),
+      );
 
       let activity = this.constructUserActivity(
         lastActivityDB,
         lastActivityCache,
+        userConnections,
       );
 
       // filter by stream status
       if (status) {
-        activity = activity.filter((act) => act.status === status);
+        activity = activity.filter((act) => act.userStatus === status);
       }
 
       // send event to trigger websocket
@@ -181,6 +216,7 @@ export class StreamStatusService {
 
       return [activity, activity.length];
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException();
     }
   }
@@ -189,15 +225,18 @@ export class StreamStatusService {
     try {
       const lastActivity = dayjs().format();
 
-      const user = await this.userService.findOneById(message.id);
+      console.log(message);
+
+      const user = await this.userService.findOneById(message.userId);
 
       if (!user) {
         return;
       }
 
       const streamStatus: streamStatusType = {
-        id: message.id,
-        name: user.name || null,
+        userId: message.userId,
+        username: user.username,
+        name: user.name,
         status: message.status,
         trackName: message.trackName,
         album: message.album,
@@ -207,16 +246,20 @@ export class StreamStatusService {
         ...message,
       };
       const date = getCurrentDate();
+
+      console.log('stream status', streamStatus);
+
       const key = `${date}_${streamStatus.name}`;
 
       // process data to redis and db
       await this.redisCacheService.set(key, streamStatus);
       await this.updateLastActivityDB({
         lastActivityTime: new Date(lastActivity),
-        user: user.name,
+        userId: user.id,
         clientKey: message.clientKey,
       });
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException();
     }
   }
