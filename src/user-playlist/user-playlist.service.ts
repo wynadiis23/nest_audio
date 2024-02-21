@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPlaylist } from './entity/user-playlist.entity';
-import { In, Repository } from 'typeorm';
-import { AddUserPlaylistDto } from './dto';
+import { Repository } from 'typeorm';
+import { AddPlaylistUserDto, AddUserPlaylistDto } from './dto';
 import * as crypto from 'crypto';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { User } from '../user/entity/user.entity';
@@ -60,6 +60,48 @@ export class UserPlaylistService {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async addPlaylistUser(payload: AddPlaylistUserDto) {
+    try {
+      const playlistUser = [];
+
+      for (const id of payload.playlistIds) {
+        const hash = this.createHash(id, payload.userId);
+        const duplicate = await this.userPlaylistRepository.findOne({
+          relations: {
+            user: true,
+            playlist: true,
+          },
+          where: {
+            hash: hash,
+          },
+        });
+
+        if (duplicate) {
+          throw new BadRequestException(
+            `user ${duplicate.user.username} has already added to this ${duplicate.playlist.name} playlist`,
+          );
+        }
+
+        playlistUser.push({
+          playlistId: id,
+          userId: payload.userId,
+          hash,
+        });
+      }
+
+      const data = this.userPlaylistRepository.create(playlistUser);
+
+      return await this.userPlaylistRepository.save(data);
+    } catch (error) {
+      console.log(error);
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+
       throw new InternalServerErrorException();
     }
   }
@@ -263,7 +305,7 @@ export class UserPlaylistService {
     }
   }
 
-  async getAvailablePlaylist(userId: string) {
+  async getAvailablePlaylist(userId: string, dataTableOptions?: IDataTable) {
     try {
       const addedPlaylistUser = await this.userPlaylistRepository.find({
         select: ['playlistId'],
@@ -272,7 +314,7 @@ export class UserPlaylistService {
         },
       });
 
-      const notYetAddedPlaylist = this.playlistRepository
+      let notYetAddedPlaylist = this.playlistRepository
         .createQueryBuilder('playlist')
         .select('playlist.id', 'id')
         .addSelect('playlist.name', 'name');
@@ -281,13 +323,25 @@ export class UserPlaylistService {
         return await notYetAddedPlaylist.getRawMany();
       }
 
-      return await notYetAddedPlaylist
-        .where('playlist.id NOT IN (:...playlistId)', {
+      notYetAddedPlaylist = notYetAddedPlaylist.where(
+        'playlist.id NOT IN (:...playlistId)',
+        {
           playlistId: addedPlaylistUser.map(
             (userPlaylist) => userPlaylist.playlistId,
           ),
-        })
-        .getRawMany();
+        },
+      );
+
+      if (dataTableOptions.filterBy) {
+        notYetAddedPlaylist = notYetAddedPlaylist
+          .andWhere(`LOWER(playlist.name) LIKE '%' || :filterValue || '%'`)
+          .setParameter(
+            'filterValue',
+            dataTableOptions.filterValue.toLocaleLowerCase(),
+          );
+      }
+
+      return notYetAddedPlaylist.getRawMany();
     } catch (error) {
       throw new InternalServerErrorException();
     }
