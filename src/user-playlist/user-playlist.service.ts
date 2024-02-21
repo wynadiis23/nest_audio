@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPlaylist } from './entity/user-playlist.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AddUserPlaylistDto } from './dto';
 import * as crypto from 'crypto';
 import { Playlist } from '../playlist/entity/playlist.entity';
@@ -146,14 +146,71 @@ export class UserPlaylistService {
 
   async remove(userIds: string[], playlistId: string) {
     try {
-      const query = this.userPlaylistRepository
-        .createQueryBuilder('up')
-        .delete()
-        .where('userId IN (:...userIds)', { userIds })
-        .andWhere('playlistId = :playlistId', { playlistId });
+      // validate playlist id
+      const validPlaylistId = await this.playlistRepository
+        .createQueryBuilder('playlist')
+        .select('id', 'id')
+        .where('id = :playlistId', { playlistId: playlistId })
+        .getRawOne();
 
-      return await query.execute();
+      if (!validPlaylistId) {
+        throw new BadRequestException('Invalid playlist id');
+      }
+
+      // validate user ids
+      const validUserIds = await this.userRepository
+        .createQueryBuilder('user')
+        .select('id', 'id')
+        .where('id IN (:...userIds)', { userIds: userIds })
+        .getRawMany();
+
+      if (userIds.length !== validUserIds.length) {
+        throw new BadRequestException('One of user id was invalid');
+      }
+
+      // validate playlist belong to user
+      await this.validatePlaylistBelongsToUsers(playlistId, userIds);
+
+      // const query = this.userPlaylistRepository
+      //   .createQueryBuilder('up')
+      //   .delete()
+      //   .where('userId IN (:...userIds)', { userIds })
+      //   .andWhere('playlistId = :playlistId', { playlistId });
+
+      // return await query.execute();
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async validatePlaylistBelongsToUsers(playlistId: string, userIds: string[]) {
+    try {
+      const userOfPlaylist: { id: string }[] = await this.userPlaylistRepository
+        .createQueryBuilder('user_playlist')
+        .select('user_playlist.user_id', 'id')
+        .where('user_playlist.playlist_id = :playlistId', { playlistId })
+        .getRawMany();
+
+      console.log(userOfPlaylist);
+
+      const playlistUserIds = userOfPlaylist.map((user) => user.id);
+
+      const validUserIds = userIds.filter((userId) =>
+        playlistUserIds.includes(userId),
+      );
+
+      if (validUserIds.length !== userIds.length) {
+        throw new BadRequestException(
+          'One of user id does not belongs to this playlist',
+        );
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
       throw new InternalServerErrorException();
     }
   }
@@ -199,6 +256,36 @@ export class UserPlaylistService {
       return await notYetAddedUsers
         .where('user.id NOT IN (:...userIds)', {
           userIds: addedUserPlaylist.map((userPlaylist) => userPlaylist.userId),
+        })
+        .getRawMany();
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getAvailablePlaylist(userId: string) {
+    try {
+      const addedPlaylistUser = await this.userPlaylistRepository.find({
+        select: ['playlistId'],
+        where: {
+          userId,
+        },
+      });
+
+      const notYetAddedPlaylist = this.playlistRepository
+        .createQueryBuilder('playlist')
+        .select('playlist.id', 'id')
+        .addSelect('playlist.name', 'name');
+
+      if (!addedPlaylistUser.length) {
+        return await notYetAddedPlaylist.getRawMany();
+      }
+
+      return await notYetAddedPlaylist
+        .where('playlist.id NOT IN (:...playlistId)', {
+          playlistId: addedPlaylistUser.map(
+            (userPlaylist) => userPlaylist.playlistId,
+          ),
         })
         .getRawMany();
     } catch (error) {
