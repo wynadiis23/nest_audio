@@ -4,7 +4,6 @@ import {
   DefaultValuePipe,
   Delete,
   Get,
-  ParseArrayPipe,
   ParseEnumPipe,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -17,7 +16,6 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
-  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -26,7 +24,6 @@ import { AddPlaylistUserDto, AddUserPlaylistDto } from './dto';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
 import { UUIDArrayPipe } from '../common/pipe';
-import { Public } from '../authentication/decorator';
 
 @ApiTags('User Specified Playlist')
 @ApiBearerAuth()
@@ -46,7 +43,6 @@ export class UserPlaylistController {
   }
 
   @Post('/playlist')
-  @Public()
   @ApiOperation({ summary: 'Add user to specified playlist' })
   @ApiBody({ type: AddPlaylistUserDto, required: true })
   async createPlaylistUser(@Body(ValidationPipe) dto: AddPlaylistUserDto) {
