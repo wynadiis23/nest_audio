@@ -279,4 +279,23 @@ export class UserPlaylistController {
 
     return await this.userPlaylistService.getAvailableUser(playlistId);
   }
+
+  // get list of playlist that not yet added to given user
+  @Get('/get/available-playlist')
+  @ApiOperation({
+    summary: 'Get all playlist that not yet added to given user',
+  })
+  @ApiQuery({
+    name: 'userId',
+    type: 'string',
+    required: true,
+    description: 'User id',
+    example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
+  })
+  async availablePlaylistForUser(
+    @Query('userId', new ParseUUIDPipe())
+    userId: string,
+  ) {
+    return await this.userPlaylistService.getAvailablePlaylist(userId);
+  }
 }
