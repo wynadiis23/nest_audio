@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UPDATE_STREAM_STATUS_EVENT_CONST } from '../event-gateway/const';
 import { updateStreamStatusMessageType } from '../event-gateway/type';
 import { UserService } from '../user/user.service';
+import { IDataTable } from '../common/interface';
 
 @Injectable()
 export class StreamStatusService {
@@ -60,59 +61,125 @@ export class StreamStatusService {
     }
   }
 
-  async getStreamStatus() {
+  async getLastActivityFromDB(dataTableOptions: IDataTable) {
+    try {
+      const entity = 'last_activity';
+      let query =
+        this.lastActivityRepository.createQueryBuilder('last_activity');
+
+      if (dataTableOptions.filterBy) {
+        if (dataTableOptions.filterBy === 'user') {
+          query = query.where(
+            `LOWER(last_activity.user) LIKE '%' || :filterValue || '%'`,
+            { filterValue: dataTableOptions.filterValue.toLowerCase() },
+          );
+        }
+      }
+
+      if (dataTableOptions.sortBy === 'lastActivityTime') {
+        dataTableOptions.sortBy = 'last_activity_time';
+      }
+
+      const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
+
+      return await query
+        .skip(skip)
+        .take(dataTableOptions.pageSize)
+        .orderBy(
+          `${entity}.${dataTableOptions.sortBy}`,
+          dataTableOptions.sortOrder,
+        )
+        .getManyAndCount();
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  constructUserActivity(
+    lastActivityDB: LastActivity[],
+    lastActivityCache: streamStatusType[],
+  ) {
+    // also get last activity to db
+    // compare it with status from cache, if user not found in cache, use last activity from db
+
+    let clientKeyMessage: string;
+
+    const activity = lastActivityDB.map((db): streamStatusType => {
+      const matchCached = lastActivityCache.find(
+        (cache) => db.user === cache.name,
+      );
+
+      if (matchCached?.clientKey) {
+        clientKeyMessage =
+          matchCached.clientKey == db.clientKey
+            ? 'match client key'
+            : 'different client key';
+      } else {
+        clientKeyMessage = 'no client key was provided by the client';
+      }
+
+      return {
+        id: db.id,
+        name: db.user,
+        status: matchCached ? matchCached.status : 'offline',
+        trackName: matchCached
+          ? matchCached.trackName
+          : 'no track name provided by the client',
+        album: matchCached
+          ? matchCached.album
+          : 'no track album provided by the client',
+        artist: matchCached
+          ? matchCached.artist
+          : 'no track artist provided by the client',
+        lastActivityTime: dayjs(db.lastActivityTime).format(),
+        savedClientKey: db.clientKey || null,
+        clientKeyStatus: clientKeyMessage,
+        clientKey: matchCached ? matchCached.clientKey : null,
+        ...matchCached,
+      };
+    });
+
+    return activity;
+  }
+
+  async getStreamStatus(dataTableOptions?: IDataTable, status?: string) {
     try {
       const date = getCurrentDate();
       const key = `${date}*`;
+      let lastActivityDB: LastActivity[];
 
-      // also get last activity to db
-      // compare it with status from cache, if user not found in cache, use last activity from db
-      // and set status to offline
+      // get last activity from db
+      if (dataTableOptions) {
+        [lastActivityDB] = await this.getLastActivityFromDB(dataTableOptions);
+      } else {
+        lastActivityDB = await this.getAllLastActivityFromDB();
+      }
 
-      const lastActivityDB = await this.getAllLastActivityFromDB();
+      // get last activity from cache
       const lastActivityCache: streamStatusType[] =
         await this.redisCacheService.getStreamStatusCache(key);
 
-      let clientKeyMessage: string;
+      // get user status
+      // get user status from cache
+      const userConnections =
+        await this.redisCacheService.getWebSocketConnections('ws_user');
+      console.log(userConnections);
 
-      const activity = lastActivityDB.map((db): streamStatusType => {
-        const matchCached = lastActivityCache.find(
-          (cache) => db.user === cache.name,
-        );
+      let activity = this.constructUserActivity(
+        lastActivityDB,
+        lastActivityCache,
+      );
 
-        if (matchCached?.clientKey) {
-          clientKeyMessage =
-            matchCached.clientKey == db.clientKey
-              ? 'match client key'
-              : 'different client key';
-        } else {
-          clientKeyMessage = 'no client key was provided by the client';
-        }
-
-        return {
-          id: db.id,
-          name: db.user,
-          status: matchCached ? matchCached.status : 'offline',
-          trackName: matchCached
-            ? matchCached.trackName
-            : 'no track name provided by the client',
-          album: matchCached
-            ? matchCached.album
-            : 'no track album provided by the client',
-          artist: matchCached
-            ? matchCached.artist
-            : 'no track artist provided by the client',
-          lastActivity: dayjs(db.lastActivityTime).format(),
-          clientKeyStatus: clientKeyMessage,
-          clientKey: matchCached ? matchCached.clientKey : null,
-          ...matchCached,
-        };
-      });
+      // filter by stream status
+      if (status) {
+        activity = activity.filter((act) => act.status === status);
+      }
 
       // send event to trigger websocket
       this.eventEmitter.emit(UPDATE_STREAM_STATUS_EVENT_CONST, activity);
 
-      return activity;
+      return [activity, activity.length];
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -135,7 +202,7 @@ export class StreamStatusService {
         trackName: message.trackName,
         album: message.album,
         artist: message.artist,
-        lastActivity,
+        lastActivityTime: lastActivity,
         clientKey: message.clientKey,
         ...message,
       };
