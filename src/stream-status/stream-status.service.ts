@@ -174,6 +174,7 @@ export class StreamStatusService {
   async getStreamStatus(
     dataTableOptions?: IDataTable,
     userStatus?: UserStatusEnum,
+    ws?: boolean,
   ) {
     try {
       const date = getCurrentDate();
@@ -216,7 +217,9 @@ export class StreamStatusService {
       }
 
       // send event to trigger websocket
-      this.eventEmitter.emit(UPDATE_STREAM_STATUS_EVENT_CONST, activity);
+      if (ws) {
+        this.eventEmitter.emit(UPDATE_STREAM_STATUS_EVENT_CONST, activity);
+      }
 
       return [activity, activity.length];
     } catch (error) {
