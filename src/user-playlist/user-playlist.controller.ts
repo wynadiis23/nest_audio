@@ -4,6 +4,7 @@ import {
   DefaultValuePipe,
   Delete,
   Get,
+  ParseArrayPipe,
   ParseEnumPipe,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -16,13 +17,16 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserPlaylistService } from './user-playlist.service';
-import { AddUserPlaylistDto } from './dto';
+import { AddPlaylistUserDto, AddUserPlaylistDto } from './dto';
 import { OperatorEnum, SortEnum } from '../common/enum';
 import { IDataTable } from '../common/interface';
+import { UUIDArrayPipe } from '../common/pipe';
+import { Public } from '../authentication/decorator';
 
 @ApiTags('User Specified Playlist')
 @ApiBearerAuth()
@@ -35,6 +39,18 @@ export class UserPlaylistController {
   @ApiBody({ type: AddUserPlaylistDto, required: true })
   async create(@Body(ValidationPipe) dto: AddUserPlaylistDto) {
     await this.userPlaylistService.add(dto);
+
+    return {
+      message: 'successfully added user to playlist',
+    };
+  }
+
+  @Post('/playlist')
+  @Public()
+  @ApiOperation({ summary: 'Add user to specified playlist' })
+  @ApiBody({ type: AddPlaylistUserDto, required: true })
+  async createPlaylistUser(@Body(ValidationPipe) dto: AddPlaylistUserDto) {
+    await this.userPlaylistService.addPlaylistUser(dto);
 
     return {
       message: 'successfully added user to playlist',
@@ -247,7 +263,7 @@ export class UserPlaylistController {
   })
   async removeUserPlaylist(
     @Query('playlistId', new ParseUUIDPipe()) playlistId: string,
-    @Query('userIds', new ParseUUIDPipe()) userIds: string[],
+    @Query('userIds', new UUIDArrayPipe()) userIds: string[],
   ) {
     if (!Array.isArray(userIds)) {
       userIds = [userIds];
@@ -292,10 +308,48 @@ export class UserPlaylistController {
     description: 'User id',
     example: '7babf166-1047-47f5-9e7d-a490b8df5a83',
   })
+  @ApiQuery({
+    name: 'filterBy',
+    type: 'string',
+    required: false,
+    description: 'Filter by property',
+    example: 'name',
+  })
+  @ApiQuery({
+    name: 'filterOperator',
+    type: 'string',
+    enum: OperatorEnum,
+    required: false,
+    description: 'Filter operator',
+    example: 'CONTAINS',
+  })
+  @ApiQuery({
+    name: 'filterValue',
+    type: 'string',
+    required: false,
+    description: 'Filter value',
+    example: 'Summit',
+  })
   async availablePlaylistForUser(
     @Query('userId', new ParseUUIDPipe())
     userId: string,
+    @Query('filterBy', new DefaultValuePipe('name')) filterBy: string,
+    @Query(
+      'filterOperator',
+      new DefaultValuePipe(OperatorEnum.CONTAINS),
+      new ParseEnumPipe(OperatorEnum),
+    )
+    filterOperator: OperatorEnum,
+    @Query('filterValue', new DefaultValuePipe('')) filterValue: string,
   ) {
-    return await this.userPlaylistService.getAvailablePlaylist(userId);
+    const dataTableOptions: IDataTable = {
+      filterBy,
+      filterOperator,
+      filterValue,
+    };
+    return await this.userPlaylistService.getAvailablePlaylist(
+      userId,
+      dataTableOptions,
+    );
   }
 }
