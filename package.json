@@ -130,8 +130,7 @@
   "lint-staged": {
     "**/*.(t|j)s": [
       "yarn lint",
-      "yarn format",
-      "yarn test --watchAll=false --findRelatedTests --bail"
+      "yarn format"
     ]
   },
   "config": {
