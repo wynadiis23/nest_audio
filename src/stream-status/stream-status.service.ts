@@ -8,7 +8,10 @@ import { getCurrentDate } from '../utils';
 import { streamStatusType } from './type';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UPDATE_STREAM_STATUS_EVENT_CONST } from '../event-gateway/const';
+import {
+  CONNECTED_USER_PREF,
+  UPDATE_STREAM_STATUS_EVENT_CONST,
+} from '../event-gateway/const';
 import { updateStreamStatusMessageType } from '../event-gateway/type';
 import { UserService } from '../user/user.service';
 import { IDataTable } from '../common/interface';
@@ -195,7 +198,7 @@ export class StreamStatusService {
       // get user status
       // get user status from cache
       const connections = await this.redisCacheService.getWebSocketConnections(
-        'ws_user',
+        `${CONNECTED_USER_PREF}`,
       );
 
       const userConnections = connections.map(
