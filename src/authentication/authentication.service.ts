@@ -125,25 +125,28 @@ export class AuthenticationService {
     username: string,
     tf?: string,
   ): Promise<{ accessToken: string; refreshToken: string; tf: string }> {
+    let tokenFamily: string;
     // find latest data for user
     const user = await this.userService.findOneById(id);
     const roles = user.roles.map((role) => role.code);
 
     let payload: tokenPayload;
     if (tf) {
+      tokenFamily = tf;
       payload = {
         sub: id,
         username: user.username,
         roles: roles,
-        tf,
+        tf: tokenFamily,
       };
     } else {
       const tf = uuid();
+      tokenFamily = tf;
       payload = {
         sub: id,
         username: user.username,
         roles: roles,
-        tf,
+        tf: tokenFamily,
       };
     }
 
@@ -160,6 +163,9 @@ export class AuthenticationService {
 
     // invalidate token in database if token we expired
     await this.tokenService.invalidateToken();
+
+    // save token
+    await this.tokenService.create(refreshToken, id, tokenFamily);
 
     return {
       accessToken,
@@ -214,13 +220,6 @@ export class AuthenticationService {
       const tokens = await this.generateTokens(
         user.id,
         user.username,
-        authorizedUser.tf,
-      );
-
-      // save new token
-      await this.tokenService.create(
-        tokens.refreshToken,
-        user.id,
         authorizedUser.tf,
       );
 
