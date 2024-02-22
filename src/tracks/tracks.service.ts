@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
 import { TracksDto } from './dto';

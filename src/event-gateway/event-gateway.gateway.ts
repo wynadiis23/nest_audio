@@ -28,6 +28,7 @@ import {
   SUBS_UPDATE_USER_STATUS,
   UPDATE_PLAYLIST_EVENT_CONST,
   UPDATE_STREAM_STATUS_EVENT_CONST,
+  CONNECTED_USER_PREF,
 } from './const';
 import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface';
@@ -65,14 +66,11 @@ export class EventGatewayGateway implements NestGateway {
 
   // subscribe incoming message of user status
   @SubscribeMessage(SUBS_UPDATE_USER_STATUS)
-  async handleUserStatus(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() message: any,
-  ) {
+  async handleUserStatus(@ConnectedSocket() client: Socket) {
     const authUser = client.handshake.auth.user as WSAuthType;
 
     await this.redisCacheService.set(
-      `ws_user_${authUser.username}`,
+      `${CONNECTED_USER_PREF}_${authUser.username}`,
       {
         id: client.id,
         username: authUser.username,
@@ -90,9 +88,10 @@ export class EventGatewayGateway implements NestGateway {
   ): Promise<void> {
     // set user in redis
     const authUser = client.handshake.auth.user as WSAuthType;
+
     // do we really need to set user every user send a message?
     await this.redisCacheService.set(
-      `ws_user_${authUser.username}`,
+      `${CONNECTED_USER_PREF}_${authUser.username}`,
       {
         id: client.id,
         username: authUser.username,
@@ -104,6 +103,7 @@ export class EventGatewayGateway implements NestGateway {
     message.userId = authUser.sub;
 
     await this.streamStatusService.updateStreamStatus(message);
+
     await this.streamStatusService.getStreamStatus(null, null, true);
   }
 
@@ -112,7 +112,7 @@ export class EventGatewayGateway implements NestGateway {
     console.log('client connect', client.id, connectedUser.username);
 
     await this.redisCacheService.set(
-      `ws_user_${connectedUser.username}`,
+      `${CONNECTED_USER_PREF}_${connectedUser.username}`,
       {
         id: client.id,
         username: connectedUser.username,
@@ -124,7 +124,7 @@ export class EventGatewayGateway implements NestGateway {
   async handleDisconnect(client: Socket) {
     try {
       console.log(client.id, ' was disconnected');
-      await this.redisCacheService.unset(`ws_user_${client.id}`);
+      await this.redisCacheService.unset(`${CONNECTED_USER_PREF}_${client.id}`);
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -142,11 +142,14 @@ export class EventGatewayGateway implements NestGateway {
       // send to specific user
       // fetch all client id for username
       const connections: { id: string; username: string }[] =
-        await this.redisCacheService.getWebSocketConnections('ws_user');
+        await this.redisCacheService.getWebSocketConnections(
+          `${CONNECTED_USER_PREF}`,
+        );
 
       const clients = connections.filter((connection) =>
         payload.users.includes(connection.username),
       );
+
       const clientIds = clients.map((client) => client.id);
 
       this.server.to(clientIds).emit(UPDATE_PLAYLIST_EVENT_CONST, {
