@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Post,
   Req,
+  Request,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +19,7 @@ import { AuthorizedUserType } from './types';
 import { KEY_REFRESH_TOKEN_COOKIE } from './const';
 import { ConfigService } from '@nestjs/config';
 import { RoleEnum } from '../user-role/enum';
+import { User } from '../user/entity/user.entity';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -37,14 +39,17 @@ export class AuthenticationController {
   @ApiOperation({
     summary: 'Sign in to application',
   })
-  async signIn(
-    @Body() dto: SignInDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const signInResponse = await this.authenticationService.signIn(dto);
+  async signIn(@Request() req, @Res({ passthrough: true }) res: Response) {
+    const authenticatedUser: User = req.user;
+
+    const tokens = await this.authenticationService.generateTokens(
+      authenticatedUser.id,
+      authenticatedUser.username,
+    );
+
     const generatedCookie =
       this.authenticationService.generateRefreshTokenCookie(
-        signInResponse.refreshToken,
+        tokens.refreshToken,
       );
     res.cookie(
       generatedCookie.key,
@@ -55,9 +60,9 @@ export class AuthenticationController {
     return {
       message: 'sign in data authenticated',
       data: {
-        username: signInResponse.username,
-        roles: signInResponse.roles.map((role) => role.code),
-        accessToken: signInResponse.accessToken,
+        username: authenticatedUser.username,
+        roles: authenticatedUser.roles.map((role) => role.code),
+        accessToken: tokens.accessToken,
       },
     };
   }
