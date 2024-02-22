@@ -125,7 +125,11 @@ export class EventGatewayGateway implements NestGateway {
   async handleDisconnect(client: Socket) {
     try {
       console.log(client.id, ' was disconnected');
+      // delete ws connection of this client
       await this.redisCacheService.unset(client.id, true);
+
+      // delete stream status of this client
+      // await this.redisCacheService.unset();
     } catch (error) {
       throw new InternalServerErrorException();
     }

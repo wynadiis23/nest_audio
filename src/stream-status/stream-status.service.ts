@@ -4,7 +4,6 @@ import { LastActivity } from '../last-activity/entity/last-activity.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { UpdateLastActivityDBDto } from './dto';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
-import { getCurrentDate } from '../utils';
 import { streamStatusType } from './type';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -18,6 +17,7 @@ import { IDataTable } from '../common/interface';
 import { userConnectionType } from './type/user-connection.type';
 import { User } from '../user/entity/user.entity';
 import { UserStatusEnum } from './enum';
+import { StreamStatusKey } from './utils';
 
 @Injectable()
 export class StreamStatusService {
@@ -33,11 +33,13 @@ export class StreamStatusService {
     try {
       let deepPartialLastActivity: DeepPartial<LastActivity>;
 
-      const lastActivity = await this.lastActivityRepository.findOne({
-        where: {
-          userId: payload.userId,
-        },
-      });
+      const lastActivity: { id: string; clientKey: string } =
+        await this.lastActivityRepository
+          .createQueryBuilder('last_act')
+          .select('last_act.id', 'id')
+          .addSelect('last_act.client_key', 'clientKey')
+          .where('user_id = :userId', { userId: payload.userId })
+          .getRawOne();
 
       if (lastActivity) {
         deepPartialLastActivity = {
@@ -180,8 +182,8 @@ export class StreamStatusService {
     ws?: boolean,
   ) {
     try {
-      const date = getCurrentDate();
-      const key = `${date}*`;
+      const key = StreamStatusKey();
+
       let lastActivityDB: LastActivity[];
 
       // get last activity from db
@@ -235,8 +237,6 @@ export class StreamStatusService {
     try {
       const lastActivity = dayjs().format();
 
-      console.log(message);
-
       const user = await this.userService.findOneById(message.userId);
 
       if (!user) {
@@ -252,11 +252,8 @@ export class StreamStatusService {
         lastActivityTime: lastActivity,
         clientKey: message.clientKey,
       };
-      const date = getCurrentDate();
 
-      console.log('stream status', streamStatus);
-
-      const key = `${date}_${streamStatus.name}`;
+      const key = StreamStatusKey(streamStatus.name);
 
       // process data to redis and db
       await this.redisCacheService.set(key, streamStatus);
