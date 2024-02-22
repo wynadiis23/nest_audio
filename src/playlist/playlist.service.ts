@@ -64,6 +64,17 @@ export class PlaylistService {
         'tracks_metadata',
         'tracks_metadata.trackId = tracks.id',
       )
+      .leftJoin(
+        UserPlaylist,
+        'user_playlist',
+        'user_playlist.playlistId = playlist.id',
+      )
+      .leftJoinAndMapMany(
+        'playlist.users',
+        User,
+        'user',
+        'user_playlist.userId = user.id',
+      )
       .where('playlist.published = :publish', { publish });
 
     if (dataTableOptions.filterBy) {
