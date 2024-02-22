@@ -43,6 +43,7 @@ import { pino, TransportTargetOptions } from 'pino';
 import { KEY_REFRESH_TOKEN_COOKIE } from './authentication/const';
 import { tokenPayload } from './authentication/types';
 import { Request } from 'express';
+import { PlaylistImageModule } from './playlist-image/playlist-image.module';
 
 @Module({
   imports: [
@@ -180,6 +181,7 @@ import { Request } from 'express';
     TracksMetadataModule,
     UserPlaylistModule,
     EventGatewayModule,
+    PlaylistImageModule,
   ],
   controllers: [AppController],
   providers: [
