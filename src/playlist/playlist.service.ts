@@ -19,6 +19,7 @@ import { IDataTable } from '../common/interface';
 import { selectQuery } from '../common/query-builder';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UpdatePlaylistEvent } from './events';
+import { PlaylistImage } from '../playlist-image/entity/playlist-image.entity';
 
 @Injectable()
 export class PlaylistService {
@@ -51,6 +52,12 @@ export class PlaylistService {
         'playlist_content.playlistId = playlist.id',
       )
       .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+      .leftJoinAndMapOne(
+        'playlist.image',
+        PlaylistImage,
+        'playlist_img',
+        'playlist.id = playlist_img.playlistId',
+      )
       .leftJoinAndMapMany(
         'playlist.contentMetadata',
         TracksMetadata,
@@ -93,6 +100,12 @@ export class PlaylistService {
           'playlist_content.playlistId = playlist.id',
         )
         .leftJoin(Tracks, 'tracks', 'playlist_content.trackId = tracks.id')
+        .leftJoinAndMapOne(
+          'playlist.image',
+          PlaylistImage,
+          'playlist_img',
+          'playlist.id = playlist_img.playlistId',
+        )
         .leftJoinAndMapMany(
           'playlist.contentMetadata',
           TracksMetadata,
