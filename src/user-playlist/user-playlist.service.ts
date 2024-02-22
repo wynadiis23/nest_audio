@@ -236,8 +236,6 @@ export class UserPlaylistService {
         .where('user_playlist.playlist_id = :playlistId', { playlistId })
         .getRawMany();
 
-      console.log(userOfPlaylist);
-
       const playlistUserIds = userOfPlaylist.map((user) => user.id);
 
       const validUserIds = userIds.filter((userId) =>
@@ -249,6 +247,15 @@ export class UserPlaylistService {
           'One of user id does not belongs to this playlist',
         );
       }
+
+      // delete
+      const query = this.userPlaylistRepository
+        .createQueryBuilder('up')
+        .delete()
+        .where('userId IN (:...userIds)', { userIds: validUserIds })
+        .andWhere('playlistId = :playlistId', { playlistId });
+
+      return await query.execute();
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
