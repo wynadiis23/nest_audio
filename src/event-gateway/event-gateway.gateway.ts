@@ -29,6 +29,7 @@ import {
   UPDATE_PLAYLIST_EVENT_CONST,
   UPDATE_STREAM_STATUS_EVENT_CONST,
   CONNECTED_USER_PREF,
+  CONNECTED_USER_TIME,
 } from './const';
 import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface';
@@ -75,7 +76,7 @@ export class EventGatewayGateway implements NestGateway {
         id: client.id,
         username: authUser.username,
       },
-      360,
+      +CONNECTED_USER_TIME,
     );
   }
 
@@ -96,7 +97,7 @@ export class EventGatewayGateway implements NestGateway {
         id: client.id,
         username: authUser.username,
       },
-      360,
+      +CONNECTED_USER_TIME,
     );
 
     // get auth user from client
@@ -117,14 +118,14 @@ export class EventGatewayGateway implements NestGateway {
         id: client.id,
         username: connectedUser.username,
       },
-      360,
+      +CONNECTED_USER_TIME,
     );
   }
 
   async handleDisconnect(client: Socket) {
     try {
       console.log(client.id, ' was disconnected');
-      await this.redisCacheService.unset(`${CONNECTED_USER_PREF}_${client.id}`);
+      await this.redisCacheService.unset(client.id, true);
     } catch (error) {
       throw new InternalServerErrorException();
     }

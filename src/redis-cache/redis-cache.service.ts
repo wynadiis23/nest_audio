@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { CONNECTED_USER_PREF } from '../event-gateway/const';
 
 @Injectable()
 export class RedisCacheService {
@@ -21,14 +22,36 @@ export class RedisCacheService {
     }
   }
 
-  async unset(key: string) {
+  async unset(key: string, ws?: boolean) {
     try {
-      return await this.cache.del(key);
+      if (!ws) {
+        return await this.cache.del(key);
+      }
+
+      // websocket delete connected user after disconnected
+      let data: { id: string; username: string };
+
+      const connectedUserKeys = await this.cache.store.keys(
+        `${CONNECTED_USER_PREF}*`,
+      );
+
+      for (const connectedUserKey of connectedUserKeys) {
+        data = await this.cache.get(connectedUserKey);
+
+        if (data.id === key) {
+          await this.cache.del(connectedUserKey);
+
+          break;
+        }
+      }
+
+      return;
     } catch (error) {
       throw new InternalServerErrorException();
     }
   }
 
+  // used for get stream status and get connected websocket user
   async getStreamStatusCache(key: string) {
     try {
       const cachedStatus = [];
