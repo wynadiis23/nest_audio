@@ -6,6 +6,7 @@ import {
   appConfiguration,
   dsConfiguration,
   loggerConfiguration,
+  mongoConfiguration,
   redisConfiguration,
   schemaValidation,
 } from './configs';
@@ -38,12 +39,15 @@ import { UserPlaylistModule } from './user-playlist/user-playlist.module';
 import { EventGatewayModule } from './event-gateway/event-gateway.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { GoogleOAuthStrategy } from './authentication/strategy/google-oauth.strategy';
-import { LoggerModule } from 'nestjs-pino';
+import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 import { pino, TransportTargetOptions } from 'pino';
 import { KEY_REFRESH_TOKEN_COOKIE } from './authentication/const';
 import { tokenPayload } from './authentication/types';
 import { Request } from 'express';
 import { PlaylistImageModule } from './playlist-image/playlist-image.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { LoggerModule } from './logger/logger.module';
+import { MongooseConfigService } from './database/mongoose-config.service';
 
 @Module({
   imports: [
@@ -59,6 +63,7 @@ import { PlaylistImageModule } from './playlist-image/playlist-image.module';
         appConfiguration,
         redisConfiguration,
         loggerConfiguration,
+        mongoConfiguration,
       ],
       validationSchema: schemaValidation,
       cache: true,
@@ -66,10 +71,13 @@ import { PlaylistImageModule } from './playlist-image/playlist-image.module';
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
+    MongooseModule.forRootAsync({
+      useClass: MongooseConfigService,
+    }),
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..'),
     // }),
-    LoggerModule.forRootAsync({
+    PinoLoggerModule.forRootAsync({
       inject: [loggerConfiguration.KEY, appConfiguration.KEY],
       useFactory: async (
         conf: ConfigType<typeof loggerConfiguration>,
@@ -182,6 +190,7 @@ import { PlaylistImageModule } from './playlist-image/playlist-image.module';
     UserPlaylistModule,
     EventGatewayModule,
     PlaylistImageModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [
