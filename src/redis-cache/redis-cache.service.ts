@@ -22,12 +22,16 @@ export class RedisCacheService {
     }
   }
 
-  async unset(key: string, ws?: boolean) {
+  async unset(key: string) {
     try {
-      if (!ws) {
-        return await this.cache.del(key);
-      }
+      return await this.cache.del(key);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 
+  async unsetWebSocket(key: string) {
+    try {
       // websocket delete connected user after disconnected
       let data: { id: string; username: string };
 
@@ -39,13 +43,13 @@ export class RedisCacheService {
         data = await this.cache.get(connectedUserKey);
 
         if (data.id === key) {
-          await this.cache.del(connectedUserKey);
+          await this.unset(connectedUserKey);
 
           break;
         }
       }
 
-      return;
+      return data;
     } catch (error) {
       throw new InternalServerErrorException();
     }

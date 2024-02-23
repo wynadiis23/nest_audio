@@ -33,6 +33,7 @@ import {
 } from './const';
 import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface';
+import { StreamStatusKey } from '../stream-status/utils';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -126,10 +127,13 @@ export class EventGatewayGateway implements NestGateway {
     try {
       console.log(client.id, ' was disconnected');
       // delete ws connection of this client
-      await this.redisCacheService.unset(client.id, true);
+      const clientConnection = await this.redisCacheService.unsetWebSocket(
+        client.id,
+      );
 
       // delete stream status of this client
-      // await this.redisCacheService.unset();
+      const streamStatusKey = StreamStatusKey(clientConnection.username);
+      await this.redisCacheService.unset(streamStatusKey);
     } catch (error) {
       throw new InternalServerErrorException();
     }
