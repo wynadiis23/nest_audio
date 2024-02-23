@@ -253,7 +253,7 @@ export class StreamStatusService {
         clientKey: message.clientKey,
       };
 
-      const key = StreamStatusKey(streamStatus.name);
+      const key = StreamStatusKey(user.username);
 
       // process data to redis and db
       await this.redisCacheService.set(key, streamStatus);
