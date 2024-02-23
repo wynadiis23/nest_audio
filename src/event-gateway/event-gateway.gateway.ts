@@ -157,10 +157,12 @@ export class EventGatewayGateway implements NestGateway {
 
       const clientIds = clients.map((client) => client.id);
 
-      this.server.to(clientIds).emit(UPDATE_PLAYLIST_EVENT_CONST, {
-        playlistId: payload.id,
-        status: payload.action,
-      });
+      if (clientIds.length) {
+        this.server.to(clientIds).emit(UPDATE_PLAYLIST_EVENT_CONST, {
+          playlistId: payload.id,
+          status: payload.action,
+        });
+      }
     } else {
       this.server.emit(UPDATE_PLAYLIST_EVENT_CONST, {
         playlistId: payload.id,

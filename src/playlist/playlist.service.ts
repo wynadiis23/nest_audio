@@ -197,8 +197,8 @@ export class PlaylistService {
 
       const playlistEventAction =
         updateResult.published == 0
-          ? 'unpublish playlist'
-          : 'add or remove track';
+          ? 'playlist has been unpublished'
+          : 'playlist has been updated';
 
       const updatePlaylistEvent = new UpdatePlaylistEvent();
       updatePlaylistEvent.id = id;
