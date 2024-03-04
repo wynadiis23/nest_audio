@@ -18,8 +18,9 @@ import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity
 import { IDataTable } from '../common/interface';
 import { selectQuery } from '../common/query-builder';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { UpdatePlaylistEvent } from './events';
+import { SCAFFOLD_UPDATED_PLAYLIST, UpdatePlaylistEvent } from './events';
 import { PlaylistImage } from '../playlist-image/entity/playlist-image.entity';
+import { UPDATE_PLAYLIST_EVENT_CONST } from '../event-gateway/const';
 
 @Injectable()
 export class PlaylistService {
@@ -204,7 +205,7 @@ export class PlaylistService {
       updatePlaylistEvent.id = id;
       updatePlaylistEvent.action = playlistEventAction;
 
-      this.eventEmitter.emit('scaffold-updated-playlist', updatePlaylistEvent);
+      this.eventEmitter.emit(SCAFFOLD_UPDATED_PLAYLIST, updatePlaylistEvent);
 
       return updateResult;
     } catch (error) {
@@ -226,13 +227,13 @@ export class PlaylistService {
     }
   }
 
-  @OnEvent('scaffold-updated-playlist')
+  @OnEvent(SCAFFOLD_UPDATED_PLAYLIST)
   async scaffoldingUpdatePlaylist(payload: UpdatePlaylistEvent) {
     try {
       const playlist = await this.detail(payload.id);
       if (!playlist) return;
 
-      this.eventEmitter.emit('update-playlist', {
+      this.eventEmitter.emit(UPDATE_PLAYLIST_EVENT_CONST, {
         ...payload,
         users: playlist['users'].map((user: User) => user.username),
       });
