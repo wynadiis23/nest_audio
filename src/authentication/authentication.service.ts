@@ -92,7 +92,6 @@ export class AuthenticationService {
     try {
       // validate username and password
       const user = await this.userService.findOneByUsername(username);
-      console.log(user);
 
       if (!user) {
         throw new UnauthorizedException('User not found');
