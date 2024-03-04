@@ -39,19 +39,11 @@ export class LoggerController {
     description: 'Users',
     example: ['johndoe', 'some-user'],
   })
-  @ApiQuery({
-    name: 'limit',
-    type: 'number',
-    required: false,
-    description: 'limit',
-    example: 20,
-  })
   async test(
     @Query('since') since: string,
     @Query('until') until: string,
     @Query('cursor') cursor: string,
     @Query('users', new DefaultValuePipe([])) users: string[],
-    @Query('limit', new DefaultValuePipe(20)) limit: number,
   ) {
     if (!Array.isArray(users)) {
       users = [users];
@@ -62,7 +54,6 @@ export class LoggerController {
       until,
       cursor,
       users,
-      limit,
     };
 
     // TODO: refactor this

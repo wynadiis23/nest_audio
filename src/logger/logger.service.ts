@@ -34,7 +34,7 @@ export class LoggerService {
       console.log(JSON.stringify(paginatedQuery, null, 2));
       console.log('next key function', nextKeyFn);
 
-      const response = await x.find(paginatedQuery).limit(5).toArray();
+      const response = await x.find(paginatedQuery).limit(5).toArray(); // hardcoded limit TODO: fix this later
 
       if (response.length) {
         const nextKey = nextKeyFn(response);
