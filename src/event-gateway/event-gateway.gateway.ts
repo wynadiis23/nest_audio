@@ -132,8 +132,10 @@ export class EventGatewayGateway implements NestGateway {
       );
 
       // delete stream status of this client
-      const streamStatusKey = StreamStatusKey(clientConnection.username);
-      await this.redisCacheService.unset(streamStatusKey);
+      if (clientConnection) {
+        const streamStatusKey = StreamStatusKey(clientConnection.username);
+        await this.redisCacheService.unset(streamStatusKey);
+      }
     } catch (error) {
       throw new InternalServerErrorException();
     }

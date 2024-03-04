@@ -156,6 +156,9 @@ export class StreamStatusService {
           ? 'online'
           : 'offline',
         status: matchCached ? matchCached.status : 'offline',
+        playlistName: matchCached
+          ? matchCached.playlistName
+          : 'no playlist name provided by the client',
         trackName: matchCached
           ? matchCached.trackName
           : 'no track name provided by the client',
@@ -246,6 +249,7 @@ export class StreamStatusService {
       const streamStatus: streamStatusType = {
         name: user.name,
         status: message.status,
+        playlistName: message.playlistName,
         trackName: message.trackName,
         album: message.album,
         artist: message.artist,
