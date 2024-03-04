@@ -184,7 +184,7 @@ export class UserController {
     };
   }
 
-  @Get('user-roles')
+  @Get('get/user-roles')
   @ApiBearerAuth()
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
