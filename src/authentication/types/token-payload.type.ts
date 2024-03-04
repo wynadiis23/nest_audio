@@ -3,4 +3,5 @@ export type tokenPayload = {
   username?: string;
   roles?: string[];
   tf?: string;
+  clientKey?: string;
 };

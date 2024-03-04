@@ -92,6 +92,7 @@ export class AuthenticationService {
     try {
       // validate username and password
       const user = await this.userService.findOneByUsername(username);
+      console.log(user);
 
       if (!user) {
         throw new UnauthorizedException('User not found');
@@ -128,6 +129,7 @@ export class AuthenticationService {
     let tokenFamily: string;
     // find latest data for user
     const user = await this.userService.findOneById(id);
+    const clientKey = user.lastActivity.clientKey;
     const roles = user.roles.map((role) => role.code);
 
     let payload: tokenPayload;
@@ -138,6 +140,7 @@ export class AuthenticationService {
         username: user.username,
         roles: roles,
         tf: tokenFamily,
+        clientKey,
       };
     } else {
       const tf = uuid();
@@ -147,6 +150,7 @@ export class AuthenticationService {
         username: user.username,
         roles: roles,
         tf: tokenFamily,
+        clientKey,
       };
     }
 

@@ -145,6 +145,9 @@ export class UserService {
   async findOneById(id: string) {
     try {
       return await this.userRepository.findOne({
+        relations: {
+          lastActivity: true,
+        },
         where: {
           id,
         },
