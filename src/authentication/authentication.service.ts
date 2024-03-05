@@ -128,7 +128,7 @@ export class AuthenticationService {
     let tokenFamily: string;
     // find latest data for user
     const user = await this.userService.findOneById(id);
-    const clientKey = user.lastActivity.clientKey;
+    const clientKey = user?.lastActivity?.clientKey || null;
     const roles = user.roles.map((role) => role.code);
 
     let payload: tokenPayload;
