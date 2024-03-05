@@ -214,8 +214,6 @@ export class StreamStatusService {
         lastActivityDB = await this.getAllLastActivityFromDB();
       }
 
-      // return lastActivityDB;
-
       // get last activity from cache
       const lastActivityCache: streamStatusType[] =
         await this.redisCacheService.getStreamStatusCache(key);

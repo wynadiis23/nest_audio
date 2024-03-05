@@ -47,6 +47,7 @@ export class TracksMetadataService {
         album: metadata.common.album,
         artist: metadata.common.artist,
         coverPath: null,
+        trackPath: payload.path,
         duration: metadata.format.duration.toString(),
       };
       const cover = selectCover(metadata.common.picture);
