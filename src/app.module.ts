@@ -48,6 +48,8 @@ import { PlaylistImageModule } from './playlist-image/playlist-image.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LoggerModule } from './logger/logger.module';
 import { MongooseConfigService } from './database/mongoose-config.service';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
 
 @Module({
   imports: [
@@ -77,6 +79,12 @@ import { MongooseConfigService } from './database/mongoose-config.service';
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..'),
     // }),
+    PrometheusModule.register({
+      defaultLabels: {
+        app: 'NESTJS-AUDIO',
+      },
+      controller: PromMetricsController,
+    }),
     PinoLoggerModule.forRootAsync({
       inject: [loggerConfiguration.KEY, appConfiguration.KEY],
       useFactory: async (
@@ -158,14 +166,28 @@ import { MongooseConfigService } from './database/mongoose-config.service';
                       ]
                     : []),
 
-                  ...(conf.logger_mongo
+                  // ...(conf.logger_mongo
+                  //   ? [
+                  //       {
+                  //         target: 'pino-mongodb',
+                  //         level: 'trace',
+                  //         options: {
+                  //           uri: conf.mongo_uri,
+                  //           collection: conf.mongo_coll,
+                  //         },
+                  //       } satisfies TransportTargetOptions,
+                  //     ]
+                  //   : []),
+
+                  ...(conf.logger_loki
                     ? [
                         {
-                          target: 'pino-mongodb',
-                          level: 'trace',
+                          target: 'pino-loki',
                           options: {
-                            uri: conf.mongo_uri,
-                            collection: conf.mongo_coll,
+                            labels: { application: 'NESTJS-AUDIO' },
+                            batching: true,
+                            interval: 5,
+                            host: conf.logger_loki_url,
                           },
                         } satisfies TransportTargetOptions,
                       ]
@@ -192,7 +214,7 @@ import { MongooseConfigService } from './database/mongoose-config.service';
     PlaylistImageModule,
     LoggerModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, PromMetricsController],
   providers: [
     AppService,
     IsNotExist,

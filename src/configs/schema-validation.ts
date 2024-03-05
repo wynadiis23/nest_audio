@@ -24,6 +24,8 @@ export const schemaValidation = Joi.object({
   LOG_MONGO: Joi.boolean().required(),
   LOG_MONGO_COLLECTION: Joi.string().required(),
   LOG_MONGO_URI: Joi.string().required(),
+  LOG_LOKI: Joi.boolean().required(),
+  LOG_LOKI_URL: Joi.string().required(),
 
   // Database Configuration
   DS_HOST: Joi.string().required(),
