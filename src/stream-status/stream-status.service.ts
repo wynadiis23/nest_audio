@@ -159,6 +159,9 @@ export class StreamStatusService {
         playlistName: matchCached
           ? matchCached.playlistName
           : 'no playlist name provided by the client',
+        volume: matchCached
+          ? matchCached.volume
+          : 'no volume provided by the client',
         trackName: matchCached
           ? matchCached.trackName
           : 'no track name provided by the client',
@@ -255,6 +258,7 @@ export class StreamStatusService {
         artist: message.artist,
         lastActivityTime: lastActivity,
         clientKey: message.clientKey,
+        volume: message.volume,
       };
 
       const key = StreamStatusKey(user.username);

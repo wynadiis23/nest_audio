@@ -7,6 +7,7 @@ export type streamStatusType = {
   album: string;
   artist: string;
   clientKey: string;
+  volume: string;
   userStatus?: string;
   savedClientKey?: string;
   clientKeyStatus?: string;
