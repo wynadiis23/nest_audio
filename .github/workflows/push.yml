@@ -7,7 +7,6 @@ jobs:
   deploy:
     runs-on: nest-audio
     steps:
-      - uses: TooMuch4U/runner-post-cleanup@v2.1
       - uses: actions/checkout@v2
       - name: setup variables
         run: |
@@ -55,3 +54,4 @@ jobs:
       - name: clean up docker image
         run: |
           docker image prune
+      - uses: colpal/actions-clean@v1
