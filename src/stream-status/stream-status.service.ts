@@ -19,6 +19,7 @@ import { User } from '../user/entity/user.entity';
 import { UserStatusEnum } from './enum';
 import { StreamStatusKey } from './utils';
 import { STREAM_STATUS_TIME } from './const';
+import { UserRole } from '../user-role/entity/user-role.entity';
 
 @Injectable()
 export class StreamStatusService {
@@ -83,6 +84,14 @@ export class StreamStatusService {
         'user.id = last_activity.userId',
       );
 
+      // exclude admin from stream status data
+      query = query.leftJoin(
+        UserRole,
+        'user_role',
+        'user_role.userId = user.id',
+      );
+      query = query.where('user_role.code != :admin', { admin: 'ADMIN' });
+
       return await query.getMany();
     } catch (error) {
       throw new InternalServerErrorException();
@@ -100,6 +109,12 @@ export class StreamStatusService {
         'user.id = last_activity.userId',
       );
 
+      query = query.leftJoin(
+        UserRole,
+        'user_role',
+        'user_role.userId = user.id',
+      );
+
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy === 'user') {
           query = query.where(
@@ -108,6 +123,9 @@ export class StreamStatusService {
           );
         }
       }
+
+      // exclude admin from stream status data
+      query = query.andWhere('user_role.code != :admin', { admin: 'ADMIN' });
 
       if (dataTableOptions.sortBy === 'lastActivityTime') {
         dataTableOptions.sortBy = 'lastActivityTime';
@@ -150,13 +168,13 @@ export class StreamStatusService {
         (cache) => db.name === cache.name,
       );
 
-      if (matchCached) {
+      if (matchCached && db?.lastActivity?.clientKey) {
         clientKeyMessage =
           matchCached.clientKey == db.lastActivity.clientKey
-            ? 'match client key'
-            : 'different client key';
+            ? 'Match client key'
+            : 'Different client key';
       } else {
-        clientKeyMessage = 'no client key was provided by the client';
+        clientKeyMessage = 'No client key was provided or saved by the client';
       }
 
       return {
@@ -165,28 +183,28 @@ export class StreamStatusService {
         userStatus: userConnections.find(
           (userCon) => userCon.user === db.username,
         )
-          ? 'online'
-          : 'offline',
-        status: matchCached ? matchCached.status : 'offline',
+          ? 'Online'
+          : 'Offline',
+        status: matchCached ? matchCached.status : 'Stopped',
         playlistName: matchCached
           ? matchCached.playlistName ||
-            'no playlist name provided by the client'
-          : 'no playlist name provided by the client',
+            'No playlist name provided by the client'
+          : 'No playlist name provided by the client',
         volume: matchCached
-          ? matchCached.volume || 'no volume provided by the client'
-          : 'no volume provided by the client',
+          ? matchCached.volume || 'No volume provided by the client'
+          : 'No volume provided by the client',
         trackName: matchCached
-          ? matchCached.trackName || 'no track name provided by the client'
-          : 'no track name provided by the client',
+          ? matchCached.trackName || 'No track name provided by the client'
+          : 'No track name provided by the client',
         album: matchCached
-          ? matchCached.album || 'no track album provided by the client'
-          : 'no track album provided by the client',
+          ? matchCached.album || 'No track album provided by the client'
+          : 'No track album provided by the client',
         artist: matchCached
-          ? matchCached.artist || 'no track artist provided by the client'
-          : 'no track artist provided by the client',
+          ? matchCached.artist || 'No track artist provided by the client'
+          : 'No track artist provided by the client',
         lastActivityTime: db.lastActivity
           ? dayjs(db.lastActivity.lastActivityTime).format()
-          : 'no last activity time',
+          : 'No last activity time',
         savedClientKey: db.lastActivity ? db.lastActivity.clientKey : null,
         clientKeyStatus: clientKeyMessage,
         clientKey: matchCached ? matchCached.clientKey : null,
@@ -242,8 +260,12 @@ export class StreamStatusService {
         activity = activity.filter((act) => act.userStatus === userStatus);
       }
 
-      // send event to trigger websocket
+      // send event to trigger websocket only online user
       if (ws) {
+        activity = activity.filter(
+          (act) => act.userStatus === UserStatusEnum.ONLINE,
+        );
+
         this.eventEmitter.emit(UPDATE_STREAM_STATUS_EVENT_CONST, activity);
       }
 
