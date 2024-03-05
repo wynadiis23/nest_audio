@@ -4,6 +4,7 @@ export type updateStreamStatusMessageType = {
   status: string;
   playlistName: string;
   trackName: string;
+  volume: string;
   artist?: string;
   album?: string;
   clientKey?: string;
