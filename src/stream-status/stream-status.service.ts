@@ -19,6 +19,7 @@ import { User } from '../user/entity/user.entity';
 import { UserStatusEnum } from './enum';
 import { StreamStatusKey } from './utils';
 import { STREAM_STATUS_TIME } from './const';
+import { UserRole } from '../user-role/entity/user-role.entity';
 
 @Injectable()
 export class StreamStatusService {
@@ -83,6 +84,14 @@ export class StreamStatusService {
         'user.id = last_activity.userId',
       );
 
+      // exclude admin from stream status data
+      query = query.leftJoin(
+        UserRole,
+        'user_role',
+        'user_role.userId = user.id',
+      );
+      query = query.where('user_role.code != :admin', { admin: 'ADMIN' });
+
       return await query.getMany();
     } catch (error) {
       throw new InternalServerErrorException();
@@ -100,6 +109,12 @@ export class StreamStatusService {
         'user.id = last_activity.userId',
       );
 
+      query = query.leftJoin(
+        UserRole,
+        'user_role',
+        'user_role.userId = user.id',
+      );
+
       if (dataTableOptions.filterBy) {
         if (dataTableOptions.filterBy === 'user') {
           query = query.where(
@@ -108,6 +123,9 @@ export class StreamStatusService {
           );
         }
       }
+
+      // exclude admin from stream status data
+      query = query.andWhere('user_role.code != :admin', { admin: 'ADMIN' });
 
       if (dataTableOptions.sortBy === 'lastActivityTime') {
         dataTableOptions.sortBy = 'lastActivityTime';
