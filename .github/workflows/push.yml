@@ -54,5 +54,3 @@ jobs:
       - name: clean up docker image
         run: |
           docker image prune
-      - uses: colpal/actions-clean@v1
-        if: ${{ always() }}
