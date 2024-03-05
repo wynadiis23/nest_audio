@@ -28,6 +28,8 @@ export class StreamStatusService {
     private readonly redisCacheService: RedisCacheService,
     private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async updateLastActivityDB(payload: UpdateLastActivityDBDto) {
@@ -73,11 +75,15 @@ export class StreamStatusService {
 
   async getAllLastActivityFromDB() {
     try {
-      return await this.lastActivityRepository.find({
-        relations: {
-          user: true,
-        },
-      });
+      let query = this.userRepository.createQueryBuilder('user');
+
+      query = query.leftJoinAndSelect(
+        'user.lastActivity',
+        'last_activity',
+        'user.id = last_activity.userId',
+      );
+
+      return await query.getMany();
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -85,15 +91,13 @@ export class StreamStatusService {
 
   async getLastActivityFromDB(dataTableOptions: IDataTable) {
     try {
-      const entity = 'last_activity';
-      let query =
-        this.lastActivityRepository.createQueryBuilder('last_activity');
+      let entity = 'last_activity';
+      let query = this.userRepository.createQueryBuilder('user');
 
-      query = query.leftJoinAndMapOne(
-        'last_activity.user',
-        User,
-        'user',
-        'last_activity.user_id = user.id',
+      query = query.leftJoinAndSelect(
+        'user.lastActivity',
+        'last_activity',
+        'user.id = last_activity.userId',
       );
 
       if (dataTableOptions.filterBy) {
@@ -106,7 +110,12 @@ export class StreamStatusService {
       }
 
       if (dataTableOptions.sortBy === 'lastActivityTime') {
-        dataTableOptions.sortBy = 'last_activity_time';
+        dataTableOptions.sortBy = 'lastActivityTime';
+      }
+
+      if (dataTableOptions.sortBy === 'user') {
+        entity = 'user';
+        dataTableOptions.sortBy = 'name';
       }
 
       const skip = dataTableOptions.pageSize * dataTableOptions.pageIndex || 0;
@@ -117,6 +126,7 @@ export class StreamStatusService {
         .orderBy(
           `${entity}.${dataTableOptions.sortBy}`,
           dataTableOptions.sortOrder,
+          'NULLS LAST',
         )
         .getManyAndCount();
     } catch (error) {
@@ -126,7 +136,7 @@ export class StreamStatusService {
   }
 
   constructUserActivity(
-    lastActivityDB: LastActivity[],
+    lastActivityDB: User[],
     lastActivityCache: streamStatusType[],
     userConnections: userConnectionType[],
   ) {
@@ -137,12 +147,12 @@ export class StreamStatusService {
 
     const activity = lastActivityDB.map((db): streamStatusType => {
       const matchCached = lastActivityCache.find(
-        (cache) => db.user.name === cache.name,
+        (cache) => db.name === cache.name,
       );
 
       if (matchCached) {
         clientKeyMessage =
-          matchCached.clientKey == db.clientKey
+          matchCached.clientKey == db.lastActivity.clientKey
             ? 'match client key'
             : 'different client key';
       } else {
@@ -151,9 +161,9 @@ export class StreamStatusService {
 
       return {
         // TODO: refactor this
-        name: db.user.name,
+        name: db.name,
         userStatus: userConnections.find(
-          (userCon) => userCon.user === db.user.username,
+          (userCon) => userCon.user === db.username,
         )
           ? 'online'
           : 'offline',
@@ -174,8 +184,10 @@ export class StreamStatusService {
         artist: matchCached
           ? matchCached.artist || 'no track artist provided by the client'
           : 'no track artist provided by the client',
-        lastActivityTime: dayjs(db.lastActivityTime).format(),
-        savedClientKey: db.clientKey || null,
+        lastActivityTime: db.lastActivity
+          ? dayjs(db.lastActivity.lastActivityTime).format()
+          : 'no last activity time',
+        savedClientKey: db.lastActivity ? db.lastActivity.clientKey : null,
         clientKeyStatus: clientKeyMessage,
         clientKey: matchCached ? matchCached.clientKey : null,
         ...matchCached,
@@ -193,7 +205,7 @@ export class StreamStatusService {
     try {
       const key = StreamStatusKey();
 
-      let lastActivityDB: LastActivity[];
+      let lastActivityDB: any[];
 
       // get last activity from db
       if (dataTableOptions) {
@@ -201,6 +213,8 @@ export class StreamStatusService {
       } else {
         lastActivityDB = await this.getAllLastActivityFromDB();
       }
+
+      // return lastActivityDB;
 
       // get last activity from cache
       const lastActivityCache: streamStatusType[] =
