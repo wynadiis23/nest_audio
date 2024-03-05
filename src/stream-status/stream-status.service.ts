@@ -18,6 +18,7 @@ import { userConnectionType } from './type/user-connection.type';
 import { User } from '../user/entity/user.entity';
 import { UserStatusEnum } from './enum';
 import { StreamStatusKey } from './utils';
+import { STREAM_STATUS_TIME } from './const';
 
 @Injectable()
 export class StreamStatusService {
@@ -149,6 +150,7 @@ export class StreamStatusService {
       }
 
       return {
+        // TODO: refactor this
         name: db.user.name,
         userStatus: userConnections.find(
           (userCon) => userCon.user === db.user.username,
@@ -157,19 +159,20 @@ export class StreamStatusService {
           : 'offline',
         status: matchCached ? matchCached.status : 'offline',
         playlistName: matchCached
-          ? matchCached.playlistName
+          ? matchCached.playlistName ||
+            'no playlist name provided by the client'
           : 'no playlist name provided by the client',
         volume: matchCached
-          ? matchCached.volume
+          ? matchCached.volume || 'no volume provided by the client'
           : 'no volume provided by the client',
         trackName: matchCached
-          ? matchCached.trackName
+          ? matchCached.trackName || 'no track name provided by the client'
           : 'no track name provided by the client',
         album: matchCached
-          ? matchCached.album
+          ? matchCached.album || 'no track album provided by the client'
           : 'no track album provided by the client',
         artist: matchCached
-          ? matchCached.artist
+          ? matchCached.artist || 'no track artist provided by the client'
           : 'no track artist provided by the client',
         lastActivityTime: dayjs(db.lastActivityTime).format(),
         savedClientKey: db.clientKey || null,
@@ -264,7 +267,7 @@ export class StreamStatusService {
       const key = StreamStatusKey(user.username);
 
       // process data to redis and db
-      await this.redisCacheService.set(key, streamStatus);
+      await this.redisCacheService.set(key, streamStatus, +STREAM_STATUS_TIME);
       await this.updateLastActivityDB({
         lastActivityTime: new Date(lastActivity),
         userId: user.id,
