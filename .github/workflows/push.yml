@@ -27,6 +27,8 @@ jobs:
           echo LOG_MONGO=${{ secrets.LOG_MONGO }} >> .env
           echo LOG_MONGO_COLLECTION=${{ secrets.LOG_MONGO_COLLECTION }} >> .env
           echo LOG_MONGO_URI=${{ secrets.LOG_MONGO_URI }} >> .env
+          echo LOG_LOKI=${{ secrets.LOG_LOKI }} >> .env
+          echo LOG_LOKI_URL=${{ secrets.LOG_LOKI_URL }} >> .env
 
           echo OAUTH_GOOGLE_ID=${{ secrets.OAUTH_GOOGLE_ID }} >> .env
           echo OAUTH_GOOGLE_SECRET=${{ secrets.OAUTH_GOOGLE_SECRET }} >> .env
