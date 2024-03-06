@@ -121,6 +121,9 @@ export class EventGatewayGateway implements NestGateway {
       },
       +CONNECTED_USER_TIME,
     );
+
+    // update stream status data of online user
+    await this.streamStatusService.getStreamStatus(null, null, true);
   }
 
   async handleDisconnect(client: Socket) {
