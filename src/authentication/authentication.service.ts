@@ -124,7 +124,17 @@ export class AuthenticationService {
     id: string,
     username: string,
     tf?: string,
-  ): Promise<{ accessToken: string; refreshToken: string; tf: string }> {
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    tf: string;
+    userData: {
+      username: string;
+      name: string;
+      roles: string[];
+      clientKey: string;
+    };
+  }> {
     let tokenFamily: string;
     // find latest data for user
     const user = await this.userService.findOneById(id);
@@ -170,10 +180,23 @@ export class AuthenticationService {
     // save token
     await this.tokenService.create(refreshToken, id, tokenFamily);
 
+    const userData: {
+      username: string;
+      name: string;
+      roles: string[];
+      clientKey: string;
+    } = {
+      username: user.username,
+      name: user.name,
+      roles: roles,
+      clientKey,
+    };
+
     return {
       accessToken,
       refreshToken,
       tf: payload.tf,
+      userData,
     };
   }
   async validateAccessToken(token: tokenPayload): Promise<boolean> {
@@ -219,16 +242,17 @@ export class AuthenticationService {
   async generateNewRefreshToken(authorizedUser: AuthorizedUserType) {
     try {
       // get user data
-      const user = await this.userService.findOneById(authorizedUser.id);
+      // const user = await this.userService.findOneById(authorizedUser.id);
       const tokens = await this.generateTokens(
-        user.id,
-        user.username,
+        authorizedUser.id,
+        authorizedUser.username,
         authorizedUser.tf,
       );
 
       return {
-        username: user.username,
-        roles: user.roles,
+        username: tokens.userData.username,
+        roles: tokens.userData.roles,
+        clientKey: tokens.userData.clientKey,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       };

@@ -63,6 +63,7 @@ export class AuthenticationController {
         username: authenticatedUser.username,
         roles: authenticatedUser.roles.map((role) => role.code),
         accessToken: tokens.accessToken,
+        clientKey: authenticatedUser?.lastActivity?.clientKey || null,
       },
     };
   }
@@ -115,8 +116,9 @@ export class AuthenticationController {
       message: 'successfully renew token',
       data: {
         username: tokens.username,
-        roles: tokens.roles.map((role) => role.code),
+        roles: tokens.roles,
         accessToken: tokens.accessToken,
+        clientKey: tokens.clientKey || null,
       },
     };
   }
