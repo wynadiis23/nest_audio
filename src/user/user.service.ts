@@ -11,12 +11,16 @@ import { UserPlaylist } from '../user-playlist/entity/user-playlist.entity';
 import { Playlist } from '../playlist/entity/playlist.entity';
 import { UpdateUserDto } from './dto';
 import { IDataTable } from '../common/interface';
+import * as dayjs from 'dayjs';
+import { LastActivity } from '../last-activity/entity/last-activity.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(LastActivity)
+    private readonly lastActivityRepository: Repository<LastActivity>,
   ) {}
 
   async list(isActive: number, dataTableOptions: IDataTable) {
@@ -242,6 +246,31 @@ export class UserService {
       if (error instanceof BadRequestException) {
         throw new BadRequestException(error.message);
       }
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async addOrUpdateClientKey(userId: string, clientKey: string) {
+    const lastActivity = dayjs().format();
+    const data = this.lastActivityRepository.create({
+      userId: userId,
+      lastActivityTime: new Date(lastActivity),
+      clientKey: clientKey,
+    });
+    try {
+      const user = await this.findOneById(userId);
+
+      if (user.lastActivity) {
+        user.lastActivity.lastActivityTime = new Date(lastActivity);
+        user.lastActivity.clientKey = clientKey;
+      } else {
+        user.lastActivity = data;
+      }
+
+      user.save();
+
+      return user;
+    } catch (error) {
       throw new InternalServerErrorException();
     }
   }

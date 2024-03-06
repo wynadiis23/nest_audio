@@ -8,6 +8,7 @@ import {
   ParseEnumPipe,
   ParseIntPipe,
   ParseUUIDPipe,
+  Post,
   Put,
   Query,
   Req,
@@ -28,6 +29,7 @@ import { IDataTable } from '../common/interface';
 import { RoleEnum } from '../user-role/enum';
 import { RolesGuard } from '../authentication/guard';
 import { IsActiveEnum } from './enum';
+import { ClientKeyUserDto } from './dto/client-key-user.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -192,5 +194,19 @@ export class UserController {
   async userRoles() {
     const roles = Object.values(RoleEnum);
     return roles;
+  }
+
+  @Post('client-key')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set user client key' })
+  @ApiBody({
+    type: ClientKeyUserDto,
+    required: true,
+  })
+  async userClientKey(@Body() dto: ClientKeyUserDto, @Req() req: any) {
+    return await this.userService.addOrUpdateClientKey(
+      req.user.sub,
+      dto.clientKey,
+    );
   }
 }
