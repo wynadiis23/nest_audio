@@ -265,7 +265,10 @@ export class UserService {
 
       if (user.lastActivity) {
         user.lastActivity.lastActivityTime = new Date(lastActivity);
-        user.lastActivity.clientKey = clientKey;
+
+        if (!user.lastActivity.clientKey) {
+          user.lastActivity.clientKey = clientKey;
+        }
       } else {
         user.lastActivity = data;
       }
