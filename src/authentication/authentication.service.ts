@@ -385,10 +385,13 @@ export class AuthenticationService {
       // save token
       await this.tokenService.create(tokens.refreshToken, user.id, tokens.tf);
 
+      const clientKey = user?.lastActivity?.clientKey || null;
+
       const payload = {
         username: user.username,
         roles: user.roles.map((role) => role.code),
         accessToken: tokens.accessToken,
+        clientKey,
       };
 
       const generatedCookie = this.generateRefreshTokenCookie(
