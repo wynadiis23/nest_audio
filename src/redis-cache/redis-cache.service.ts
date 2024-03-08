@@ -6,17 +6,20 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { CONNECTED_USER_PREF } from '../event-gateway/const';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class RedisCacheService {
   constructor(
-    @Inject(CACHE_MANAGER)
-    private readonly cache: Cache,
+    // @Inject(CACHE_MANAGER)
+    // private readonly cache: Cache,
+    @InjectRedis() private readonly cache: Redis,
   ) {}
 
   async set(key: string, value: any, ttl?: number) {
     try {
-      return await this.cache.set(key, value, { ttl: ttl } as any);
+      return await this.cache.set(key, JSON.stringify(value), 'EX', ttl);
     } catch (error) {
       throw new InternalServerErrorException();
     }
@@ -35,12 +38,12 @@ export class RedisCacheService {
       // websocket delete connected user after disconnected
       let data: { id: string; username: string };
 
-      const connectedUserKeys = await this.cache.store.keys(
+      const connectedUserKeys = await this.cache.keys(
         `${CONNECTED_USER_PREF}*`,
       );
 
       for (const connectedUserKey of connectedUserKeys) {
-        data = await this.cache.get(connectedUserKey);
+        data = JSON.parse(await this.cache.get(connectedUserKey));
 
         if (data.id === key) {
           await this.unset(connectedUserKey);
@@ -59,10 +62,10 @@ export class RedisCacheService {
   async getStreamStatusCache(key: string) {
     try {
       const cachedStatus = [];
-      const keys: string[] = await this.cache.store.keys(`${key}*`);
+      const keys: string[] = await this.cache.keys(`${key}*`);
 
       for (const key of keys) {
-        const cached = await this.cache.get(key);
+        const cached = JSON.parse(await this.cache.get(key));
         cachedStatus.push(cached);
       }
 
@@ -76,10 +79,10 @@ export class RedisCacheService {
   async getWebSocketConnections(key: string) {
     try {
       const connections = [];
-      const keys: string[] = await this.cache.store.keys(`${key}*`);
+      const keys: string[] = await this.cache.keys(`${key}*`);
 
       for (const key of keys) {
-        const connection = await this.cache.get(key);
+        const connection = JSON.parse(await this.cache.get(key));
         connections.push(connection);
       }
 

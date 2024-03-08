@@ -38,4 +38,5 @@ export const schemaValidation = Joi.object({
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.number().default(6379),
   REDIS_TTL: Joi.number().default(360),
+  REDIS_URL: Joi.string().required(),
 });

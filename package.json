@@ -33,6 +33,7 @@
     "seed:revert": "npm run seed && npm run typeorm -- migration:revert -d ormconfig-seed.ts"
   },
   "dependencies": {
+    "@nestjs-modules/ioredis": "^2.0.2",
     "@nestjs/cache-manager": "^2.2.0",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.2.0",
@@ -59,8 +60,10 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.10",
+    "fluent-ffmpeg": "^2.1.2",
     "google-auth-library": "^9.6.3",
     "helmet": "^7.1.0",
+    "ioredis": "^5.3.2",
     "joi": "^17.12.0",
     "mongoose": "^8.2.0",
     "music-metadata": "^7.14.0",
@@ -90,6 +93,7 @@
     "@types/cache-manager": "4.0.2",
     "@types/cache-manager-redis-store": "2.0.1",
     "@types/express": "^4.17.13",
+    "@types/fluent-ffmpeg": "^2.1.24",
     "@types/jest": "29.2.4",
     "@types/node": "18.11.18",
     "@types/passport-google-oauth20": "^2.0.14",
