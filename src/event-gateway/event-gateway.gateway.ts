@@ -79,6 +79,8 @@ export class EventGatewayGateway implements NestGateway {
       },
       +CONNECTED_USER_TIME,
     );
+
+    await this.streamStatusService.getStreamStatus(null, null, true);
   }
 
   // subscribe incoming message from web socket client
