@@ -1,1 +1,1 @@
-export const STREAM_STATUS_TIME = 180;
+export const STREAM_STATUS_TIME = 3600;
