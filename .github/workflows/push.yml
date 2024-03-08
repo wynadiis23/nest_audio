@@ -44,6 +44,7 @@ jobs:
           echo REDIS_HOST=${{ secrets.REDIS_HOST }} >> .env
           echo REDIS_PORT=${{ secrets.REDIS_PORT }} >> .env
           echo REDIS_TTL=${{ secrets.REDIS_TTL }} >> .env
+          echo REDIS_URL=${{ secrets.REDIS_URL }} >> .env
           cat .env
       - name: build the stack
         run: docker compose build --no-cache
