@@ -73,9 +73,9 @@ import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
-    MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
-    }),
+    // MongooseModule.forRootAsync({
+    //   useClass: MongooseConfigService,
+    // }),
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..'),
     // }),
@@ -212,7 +212,7 @@ import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
     UserPlaylistModule,
     EventGatewayModule,
     PlaylistImageModule,
-    LoggerModule,
+    // LoggerModule,
   ],
   controllers: [AppController, PromMetricsController],
   providers: [
