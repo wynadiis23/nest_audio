@@ -22,6 +22,9 @@ import { TracksMetadata } from '../tracks-metadata/entity/tracks-metadata.entity
 import { IDataTable } from '../common/interface';
 import { trackListSortMapping } from './common';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bull';
+import { REGISTERED_QUEUE } from '../common/const';
+import { Queue } from 'bull';
 
 @Injectable()
 export class TracksService {
@@ -32,6 +35,8 @@ export class TracksService {
     private readonly tracksMetadataService: TracksMetadataService,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    @InjectQueue(REGISTERED_QUEUE)
+    private readonly audioTranscodingQueue: Queue,
   ) {}
 
   async list(dataTableOptions: IDataTable) {
@@ -191,13 +196,6 @@ export class TracksService {
         );
       }
 
-      for (const track of payload.tracks) {
-        this.eventEmitter.emit('add-tracks', {
-          track: track.name,
-          status: 'adding tracks',
-        });
-      }
-
       const queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
@@ -217,20 +215,33 @@ export class TracksService {
             name: track.name,
           });
 
-          this.eventEmitter.emit('add-tracks', {
-            track: track.name,
-            status: 'getting metadata',
-          });
-          await this.tracksMetadataService.create(metadata, queryRunner);
+          const createdMetadata = await this.tracksMetadataService.create(
+            metadata,
+            queryRunner,
+          );
+
+          let metadataId: string;
+          if (Array.isArray(createdMetadata)) {
+            metadataId = createdMetadata[0].id;
+          } else {
+            metadataId = createdMetadata.id;
+          }
+
+          // add queue
+          await this.audioTranscodingQueue.add(
+            {
+              trackId: track.id,
+              trackPath: track.path,
+              trackName: track.name,
+              metadataId: metadataId,
+            },
+            { delay: 3000, removeOnComplete: true },
+          );
         }
 
         // commit all transaction
         await queryRunner.commitTransaction();
 
-        this.eventEmitter.emit('add-tracks', {
-          track: null,
-          status: null,
-        });
         return savedTracks;
       } catch (error) {
         await queryRunner.rollbackTransaction();
@@ -340,6 +351,9 @@ export class TracksService {
   async getTrackMetadata(id: string) {
     try {
       const trackMetadata = await this.tracksRepository.findOne({
+        relations: {
+          trackMetadata: true,
+        },
         where: {
           id: id,
         },
@@ -392,7 +406,8 @@ export class TracksService {
   async getPartialTrackStream(id: string, range: string) {
     try {
       const trackMetadata = await this.getTrackMetadata(id);
-      const trackPath = join(__dirname, '../..', trackMetadata.path);
+      const trackPathFallback = await this.trackPathFallback(trackMetadata);
+      const trackPath = join(__dirname, '../..', trackPathFallback);
 
       const fileExist = await this.checkFileExist(trackPath);
       if (!fileExist) {
@@ -438,7 +453,8 @@ export class TracksService {
   async getTrackStreamById(id: string) {
     try {
       const trackMetadata = await this.getTrackMetadata(id);
-      const trackPath = join(__dirname, '../..', trackMetadata.path);
+      const trackPathFallback = await this.trackPathFallback(trackMetadata);
+      const trackPath = join(__dirname, '../..', trackPathFallback);
 
       const fileExist = await this.checkFileExist(trackPath);
 
@@ -470,24 +486,14 @@ export class TracksService {
       const path = this.configService.get<string>('APP_TRACK_FOLDER');
       const directory = join(__dirname, '../..', path);
 
-      fs.readdir(directory, (err, files) => {
+      fs.rm(directory, { recursive: true }, (err) => {
         if (err) {
           throw new BadRequestException(
-            `error while reading directory ${directory}`,
+            `error while delete file on disk`,
             err.message,
           );
-        }
-        for (const file of files) {
-          fs.unlink(join(directory, file), (err) => {
-            if (err) {
-              throw new BadRequestException(
-                `error while delete file on disk`,
-                err.message,
-              );
-            } else {
-              Logger.warn('Delete file on disk', 'TracksService');
-            }
-          });
+        } else {
+          Logger.warn('Delete file on disk', 'TracksService');
         }
       });
 
@@ -504,5 +510,16 @@ export class TracksService {
     const file = fs.existsSync(path);
 
     return file;
+  }
+
+  async trackPathFallback(track: Tracks) {
+    try {
+      const trackPath =
+        track.trackMetadata.trackPathWebM ?? track.trackMetadata.trackPath;
+
+      return trackPath;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 }

@@ -26,6 +26,9 @@ export class TracksMetadata extends SharedEntity {
   @Column({ length: 255, name: 'track_path' })
   trackPath: string;
 
+  @Column({ length: 255, name: 'track_path_webm', nullable: true })
+  trackPathWebM: string;
+
   @Column({ name: 'track_id' })
   trackId: string;
 

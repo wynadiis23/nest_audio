@@ -50,6 +50,8 @@ import { LoggerModule } from './logger/logger.module';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
+import { BullModule } from '@nestjs/bull';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -84,6 +86,14 @@ import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
         app: 'NESTJS-AUDIO',
       },
       controller: PromMetricsController,
+    }),
+    BullModule.forRootAsync({
+      inject: [redisConfiguration.KEY],
+      useFactory: async (redisConf: ConfigType<typeof redisConfiguration>) => {
+        return {
+          redis: redisConf.url,
+        };
+      },
     }),
     PinoLoggerModule.forRootAsync({
       inject: [loggerConfiguration.KEY, appConfiguration.KEY],
@@ -212,6 +222,7 @@ import { PromMetricsController } from './prom-metrics/prom-metrics.controller';
     UserPlaylistModule,
     EventGatewayModule,
     PlaylistImageModule,
+    QueueModule,
     // LoggerModule,
   ],
   controllers: [AppController, PromMetricsController],
