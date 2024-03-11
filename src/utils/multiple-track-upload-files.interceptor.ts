@@ -35,9 +35,17 @@ const trackFilter = (req, file, cb) => {
     return;
   }
 */
-  if (!file.originalname.match(/\.(mp3)$/)) {
-    // if (!file.mimetype.includes('audio')) {
-    return cb(new BadRequestException('Provide a valid audio'), false);
+  const allowedExtensions = ['.mp3'];
+  const isAllowedExtension = allowedExtensions.some((ext) =>
+    file.originalname.match(new RegExp(`\\${ext}$`)),
+  );
+  if (!isAllowedExtension) {
+    return cb(
+      new BadRequestException(
+        `Provide a valid audio. Allowed extension were ${allowedExtensions}`,
+      ),
+      false,
+    );
   }
   cb(null, true);
 };

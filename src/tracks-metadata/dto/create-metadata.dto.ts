@@ -5,4 +5,6 @@ export class CreateMetadataDto {
   duration: string;
   trackPath: string;
   trackId: string;
+  trackPathWebM?: string;
+  id?: string;
 }
