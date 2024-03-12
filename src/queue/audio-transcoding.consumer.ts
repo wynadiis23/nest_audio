@@ -13,19 +13,16 @@ import * as fs from 'fs';
 import { TracksMetadataService } from '../tracks-metadata/tracks-metadata.service';
 import { CreateMetadataDto } from '../tracks-metadata/dto';
 import { ConfigService } from '@nestjs/config';
-
-type AudioTranscodingDataType = {
-  trackId: string;
-  trackPath: string;
-  trackName: string;
-  metadataId: string;
-};
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AUDIO_TRANSCODING_EVENT } from './const';
+import { AudioTranscodingDataType } from './type';
 
 @Processor(REGISTERED_QUEUE)
 export class AudioTranscodingConsumer {
   constructor(
     private readonly tracksMetadataService: TracksMetadataService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Process()
@@ -84,6 +81,11 @@ export class AudioTranscodingConsumer {
     Logger.log(
       `Processing job ${job.id} of type ${job.name} with data ${job.data}...`,
     );
+
+    const jobData = job.data as AudioTranscodingDataType;
+    jobData.message = 'processing';
+
+    this.eventEmitter.emit(AUDIO_TRANSCODING_EVENT, jobData);
   }
 
   @OnQueueCompleted()
@@ -91,5 +93,10 @@ export class AudioTranscodingConsumer {
     Logger.log(
       `Completed job ${job.id} of type ${job.name} with data ${job.data}...`,
     );
+
+    const jobData = job.data as AudioTranscodingDataType;
+    jobData.message = 'completed';
+
+    this.eventEmitter.emit(AUDIO_TRANSCODING_EVENT, jobData);
   }
 }
