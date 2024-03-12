@@ -34,6 +34,8 @@ import {
 import { UpdateStreamStatusDtoEvent } from '../stream-status/events/dto';
 import { NestGateway } from '@nestjs/websockets/interfaces/nest-gateway.interface';
 import { StreamStatusKey } from '../stream-status/utils';
+import { AUDIO_TRANSCODING_EVENT } from '../queue/const';
+import { AudioTranscodingDataType } from '../queue/type';
 
 @UsePipes(new ValidationPipe())
 @UseFilters(new AllExceptionsSocketFilter())
@@ -183,5 +185,12 @@ export class EventGatewayGateway implements NestGateway {
         status: payload.action,
       });
     }
+  }
+
+  @OnEvent(AUDIO_TRANSCODING_EVENT)
+  async sendAudioTranscodingEvent(payload: AudioTranscodingDataType) {
+    this.server.emit(AUDIO_TRANSCODING_EVENT, {
+      payload,
+    });
   }
 }
