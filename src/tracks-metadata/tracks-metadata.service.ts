@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksMetadata } from './entity/tracks-metadata.entity';
@@ -13,6 +14,8 @@ import { tracksMetadata } from './type/tracks-metadata.type';
 import { GetMetadataDto } from './dto/get-metadata.dto';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
+import * as ffprobe from 'ffprobe';
+import * as ffprobePath from '@ffprobe-installer/ffprobe';
 
 @Injectable()
 export class TracksMetadataService {
@@ -24,6 +27,17 @@ export class TracksMetadataService {
 
   async getMetadata(payload: GetMetadataDto) {
     try {
+      let duration: string;
+
+      const trackPath = join(__dirname, '../..', payload.path);
+      ffprobe(trackPath, { path: ffprobePath.path })
+        .then(function (info) {
+          duration = info.streams[0].duration;
+        })
+        .catch(function (err) {
+          Logger.warn(err);
+        });
+
       const metadata = await parseFile(join(__dirname, '../..', payload.path), {
         duration: true,
       });
@@ -48,7 +62,7 @@ export class TracksMetadataService {
         artist: metadata.common.artist,
         coverPath: null,
         trackPath: payload.path,
-        duration: metadata.format.duration.toString(),
+        duration: duration,
       };
       const cover = selectCover(metadata.common.picture);
 
