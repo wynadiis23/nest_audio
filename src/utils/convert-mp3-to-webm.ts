@@ -14,8 +14,6 @@ export function convertMp3WebMFFmpeg(
     command
       .output(`${outputDir}/${trackName}.webm`)
       .toFormat('webm')
-      //   .videoCodec('none') // -vn equivalent
-      //   .map(0, 0) // Copy audio stream only (0:a)
       .outputOptions('-vn')
       .outputOptions('-c:a libopus')
       .run();
@@ -23,7 +21,5 @@ export function convertMp3WebMFFmpeg(
     command
       .on('end', () => resolve(`${outputDir}/${trackName}.webm`))
       .on('error', (err) => reject(err));
-
-    // command.save(`${outputDir}/output-%03d.webm`);
   });
 }
