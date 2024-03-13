@@ -235,7 +235,7 @@ export class TracksService {
               trackName: track.name,
               metadataId: metadataId,
             },
-            { delay: 3000, removeOnComplete: true },
+            { delay: 1500, removeOnComplete: true },
           );
         }
 
