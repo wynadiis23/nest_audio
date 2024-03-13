@@ -1,5 +1,6 @@
 import * as ffmpeg from 'fluent-ffmpeg';
 import { FfmpegCommand } from 'fluent-ffmpeg';
+import * as ffmpegPath from '@ffmpeg-installer/ffmpeg';
 
 export function convertMp3WebMFFmpeg(
   inputPath: string,
@@ -7,6 +8,7 @@ export function convertMp3WebMFFmpeg(
   outputDir: string,
 ) {
   return new Promise((resolve, reject) => {
+    ffmpeg.setFfmpegPath(ffmpegPath.path);
     const command: FfmpegCommand = ffmpeg(inputPath);
 
     command
