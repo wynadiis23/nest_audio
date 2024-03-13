@@ -6,6 +6,7 @@ export function convertMp3WebMFFmpeg(
   inputPath: string,
   trackName: string,
   outputDir: string,
+  bitRate: number,
 ) {
   return new Promise((resolve, reject) => {
     ffmpeg.setFfmpegPath(ffmpegPath.path);
@@ -16,6 +17,7 @@ export function convertMp3WebMFFmpeg(
       .toFormat('webm')
       .outputOptions('-vn')
       .outputOptions('-c:a libopus')
+      .audioBitrate(bitRate + 'k')
       .run();
 
     command

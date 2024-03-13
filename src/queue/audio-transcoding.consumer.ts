@@ -32,6 +32,9 @@ export class AudioTranscodingConsumer {
 
     try {
       const ext = this.getExtFromFilePath(jobData.trackPath);
+      const minBitRate = this.configService.get<number>(
+        'APP_TRACK_MINIMUM_BIT_RATE',
+      );
 
       if (ext === webmExt) {
         return;
@@ -44,7 +47,12 @@ export class AudioTranscodingConsumer {
 
       const filename = name + '-' + Date.now() + webmExt;
 
-      await convertMp3WebMFFmpeg(fullPathTrack, filename, fullPathOutputDir[0]);
+      await convertMp3WebMFFmpeg(
+        fullPathTrack,
+        filename,
+        fullPathOutputDir[0],
+        minBitRate,
+      );
 
       const metadataDto = new CreateMetadataDto();
       metadataDto.id = jobData.metadataId;
