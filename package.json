@@ -33,6 +33,7 @@
     "seed:revert": "npm run seed && npm run typeorm -- migration:revert -d ormconfig-seed.ts"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@nestjs-modules/ioredis": "^2.0.2",
     "@nestjs/bull": "^10.1.0",
     "@nestjs/cache-manager": "^2.2.0",
