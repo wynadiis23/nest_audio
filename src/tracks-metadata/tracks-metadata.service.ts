@@ -171,6 +171,7 @@ export class TracksMetadataService {
   async getFFprobeMetadata(trackPath: string): Promise<ffmpeg.FfprobeData> {
     try {
       ffmpeg.setFfmpegPath(ffmpegPath.path);
+      ffmpeg.setFfprobePath(ffmpegPath.path);
 
       return new Promise((resolve, reject) => {
         ffmpeg.ffprobe(trackPath, (err, metadata) => {
