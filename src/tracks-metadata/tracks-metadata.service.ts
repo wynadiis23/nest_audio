@@ -14,8 +14,8 @@ import { tracksMetadata } from './type/tracks-metadata.type';
 import { GetMetadataDto } from './dto/get-metadata.dto';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
-import * as ffprobe from 'ffprobe';
-import * as ffprobePath from '@ffprobe-installer/ffprobe';
+import * as ffmpeg from 'fluent-ffmpeg';
+import * as ffmpegPath from '@ffmpeg-installer/ffmpeg';
 
 @Injectable()
 export class TracksMetadataService {
@@ -27,22 +27,17 @@ export class TracksMetadataService {
 
   async getMetadata(payload: GetMetadataDto) {
     try {
-      let duration: string;
-
       const trackPath = join(__dirname, '../..', payload.path);
-      ffprobe(trackPath, { path: ffprobePath.path })
-        .then(function (info) {
-          duration = info.streams[0].duration;
-        })
-        .catch(function (err) {
-          Logger.warn(err);
-        });
+
+      const trackFFProbeMetadata = await this.getFFprobeMetadata(trackPath);
+      const duration = trackFFProbeMetadata.format.duration.toString();
 
       const metadata = await parseFile(join(__dirname, '../..', payload.path), {
         duration: true,
       });
 
       const bitRate = metadata.format.bitrate;
+
       const minimumBitRate = this.configService.get<number>(
         'APP_TRACK_MINIMUM_BIT_RATE',
       );
@@ -64,6 +59,7 @@ export class TracksMetadataService {
         trackPath: payload.path,
         duration: duration,
       };
+
       const cover = selectCover(metadata.common.picture);
 
       if (cover) {
@@ -167,6 +163,24 @@ export class TracksMetadataService {
       });
 
       return destination + '/' + imgName + '.jpeg';
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async getFFprobeMetadata(trackPath: string): Promise<ffmpeg.FfprobeData> {
+    try {
+      ffmpeg.setFfmpegPath(ffmpegPath.path);
+
+      return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(trackPath, (err, metadata) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(metadata);
+          }
+        });
+      });
     } catch (error) {
       throw new InternalServerErrorException();
     }
