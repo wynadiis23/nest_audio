@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import * as ffprobePath from '@ffprobe-installer/ffprobe';
 
 @Injectable()
 export class TracksMetadataService {
@@ -171,7 +172,7 @@ export class TracksMetadataService {
   async getFFprobeMetadata(trackPath: string): Promise<ffmpeg.FfprobeData> {
     try {
       ffmpeg.setFfmpegPath(ffmpegPath.path);
-      ffmpeg.setFfprobePath(ffmpegPath.path);
+      ffmpeg.setFfprobePath(ffprobePath.path);
 
       return new Promise((resolve, reject) => {
         ffmpeg.ffprobe(trackPath, (err, metadata) => {
