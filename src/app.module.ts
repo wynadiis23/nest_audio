@@ -89,11 +89,12 @@ import { QueueModule } from './queue/queue.module';
     }),
     BullModule.forRootAsync({
       inject: [redisConfiguration.KEY],
-      useFactory: async (redisConf: ConfigType<typeof redisConfiguration>) => {
-        return {
-          redis: redisConf.url,
-        };
-      },
+      useFactory: async (redisConf: ConfigType<typeof redisConfiguration>) => ({
+        url: redisConf.url,
+        redis: {
+          family: 0,
+        },
+      }),
     }),
     PinoLoggerModule.forRootAsync({
       inject: [loggerConfiguration.KEY, appConfiguration.KEY],
